@@ -260,7 +260,9 @@ body <- dashboardBody(
         tabItem(tabName = "reccurent",
                 h2("Reccurent check"),
                 selectModel_INPUT("check"),
-                summary_UI("check")
+                summary_UI("check"),
+                nbObs_UI("check"),
+                itemTable_UI("check")
                 
         ) #tabItem -- ENDTAB: Reccurent check
         

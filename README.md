@@ -13,3 +13,10 @@ At this stage, most components will keep their original state and performances a
 
 In a second step, I will work on replacing manual interactions by automated ones (model deployment, observation input, ...)
 and initiate a continuous improvement process.
+
+
+RStudio Version 1.4.1106
+
+Version Control: Git
+
+Python:

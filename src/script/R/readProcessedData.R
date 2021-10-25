@@ -33,12 +33,5 @@ readProcessedData <- function(path, file){
   # -- filter out
   processed_df <- processed_df[cols]
   
-  # -- split input and labels
-  labels_df <- processed_df["RainTomorrow"]
-  input_df <- processed_df[, !names(processed_df) %in% c("RainTomorrow")]
-  
-  # -- return
-  c(input_df, labels_df)
-  
 }
 

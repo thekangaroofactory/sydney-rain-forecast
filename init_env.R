@@ -15,8 +15,6 @@ path <- list(script = "./src/script/R",
 # --------------------------------------------------------------------------------
 
 file <- list(raw_dataset = file.path(path$data, "sydney_2008_2017_raw.csv"),
-             input_m1 = "M1_processed_dataset_v1.csv",
-             input_m2 = "M2_processed_dataset_v1.csv",
              model_list = "model_list.csv")
 
 

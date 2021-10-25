@@ -37,6 +37,31 @@ summary_UI <- function(id)
 }
 
 
+# -- DT table UI
+itemTable_UI <- function(id)
+{
+  
+  # namespace
+  ns <- NS(id)
+  
+  # table
+  DTOutput(ns("itemTable"))
+  
+}
+
+
+# -- Value box nb_obs
+nbObs_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("nb_obs"))
+  
+}
+
+
 # --------------------------------------------------------------------------------
 # BUTTON ITEMS SECTION
 # --------------------------------------------------------------------------------
@@ -63,19 +88,48 @@ reccurentCheck_Server <- function(id, r) {
     # get namespace
     ns <- session$ns
     
-    # -- declare
+    # -- selected model (name and model)
     r$selectedModel <- reactiveVal(NULL)
     r$model <- reactiveVal(NULL)
     
     # -- load model list from folder
     r$models <- reactiveVal(read.csv(file.path(path$model, file$model_list), header = TRUE))
     
+    # -- input data for prediction
+    r$test_ds <- reactiveVal(NULL)
+    r$test_labels <- reactiveVal(NULL)
+    
+    # -- predictions
+    r$predictions <- reactiveVal(NULL)
+    
     
     # -------------------------------------
     # Outputs
     # -------------------------------------
     
+    # -- select input (model list)
     output$model_select <- renderUI(selectInput(ns("model"), "Select model", choices = r$models()$Name))
+    
+    # -- selected model name
+    output$summary <- renderUI(
+      wellPanel(r$selectedModel()))
+    
+    # -- Main table
+    output$itemTable <- renderDT(r$test_ds(),
+                                 options = list(lengthMenu = c(5, 1),
+                                                pageLength = 5,
+                                                dom = "lfrtip", #tp
+                                                ordering = TRUE,
+                                                searching = TRUE,
+                                                scrollX = TRUE),
+                                 rownames = FALSE,
+                                 selection = 'single')
+    
+    # -- number of observations
+    output$nb_obs <- renderValueBox(
+      valueBox(dim(r$test_ds())[1], "Nb obs", width = 4)
+    )
+    
     
     
     # --------------------------------------------------------------------------
@@ -94,7 +148,7 @@ reccurentCheck_Server <- function(id, r) {
       # -- load model
       model <- loadTFmodel(path, file)
       
-      # notify
+      # -- notify
       showNotification("Model loaded.")
       
       # -- store
@@ -106,9 +160,69 @@ reccurentCheck_Server <- function(id, r) {
     # -- model
     observeEvent(r$model(), {
       
-      output$summary <- renderUI(
-        wellPanel(summary(r$model()))
-      )
+      cat("observeEvent: .h5 model file loaded. \n")
+      
+      # -- get preprocessed data file name
+      file_name <- r$models()[r$models()$Name == r$selectedModel(), ]$Input
+      
+      # -- load data
+      processed_df <- readProcessedData(path$processed, file_name)
+      
+      # -- split input and labels
+      labels_df <- processed_df["RainTomorrow"]
+      input_df <- processed_df[, !names(processed_df) %in% c("RainTomorrow")]
+      
+      # -- store
+      r$test_ds(input_df)
+      r$test_labels(labels_df)
+      
+      
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
+    
+    
+    # -- test_ds
+    observeEvent(r$test_ds(), {
+      
+      cat("observeEvent: test dataset updated, computing predictions... \n")
+      
+      # -- get values
+      model <- r$model()
+      input_df <<- r$test_ds()
+      
+      # -- set paramaters
+      batch_size = 32 #default
+      verbose = 1
+      
+      # -- call prediction function
+      raw_predictions <- makePrediction(model, input_df, batch_size = batch_size, verbose = verbose, steps = NULL, callbacks = NULL)
+      raw_predictions <- as.data.frame(raw_predictions)
+      colnames(raw_predictions) <- c("Raw.Prediction")
+        
+      # notify
+      showNotification("Compute prediction done.")
+      
+      # -- store
+      r$predictions(raw_predictions)
+      
+      
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
+    
+    
+    # -- predictions
+    observeEvent(r$predictions(), {
+      
+      cat("observeEvent: test predictions updated, computing metrics... \n")
+      
+      # -- get values
+      test_labels <- r$test_labels()
+      predictions <- r$predictions()
+      
+      # -- merge
+      df <- cbind(test_labels, predictions)
+      
+      # -- call evalution function
+      eval <- evaluateModel(df)
+      
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
