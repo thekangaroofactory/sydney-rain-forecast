@@ -5,24 +5,11 @@
 # --------------------------------------------------------------------------------
 
 # -- Library
-
+library(data.table)
 
 # --------------------------------------------------------------------------------
 # UI ITEMS SECTION
 # --------------------------------------------------------------------------------
-
-# -- Select model input
-selectModel_INPUT <- function(id)
-{
-
-  # namespace
-  ns <- NS(id)
-
-  # text
-  uiOutput(ns("model_select"))
-  
-}
-
 
 # -- Summary
 summary_UI <- function(id)
@@ -61,21 +48,129 @@ nbObs_UI <- function(id){
   
 }
 
+# -- Value box Predictions_OK
+nbPredictionOK_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("predictions_ok"))
+  
+}
+
+# -- Value box Predictions_KO
+nbPredictionKO_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("predictions_ko"))
+  
+}
+
+# -- Value box Accuracy
+accuracy_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("accuracy"))
+  
+}
+
+# -- Value box Precision
+precision_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("precision"))
+  
+}
+
+# -- Value box recall
+recall_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("recall"))
+  
+}
+
+# -- Value box F1 Score
+f1Score_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("f1_score"))
+  
+}
+
+
+# -- Confusion matrix plot
+confusionPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput (ns("confusion_plot"))
+  
+}
+
+
+# --------------------------------------------------------------------------------
+# INPUT ITEMS SECTION
+# --------------------------------------------------------------------------------
+
+# -- Select model input
+selectModel_INPUT <- function(id)
+{
+  
+  # namespace
+  ns <- NS(id)
+  
+  # text
+  uiOutput(ns("model_select"))
+  
+}
+
+
+# -- Threshold slider input
+thresholdSlider_INPUT <- function(id)
+{
+  
+  # namespace
+  ns <- NS(id)
+  
+  # text
+  uiOutput(ns("thresholdSlider"))
+  
+}
+
 
 # --------------------------------------------------------------------------------
 # BUTTON ITEMS SECTION
 # --------------------------------------------------------------------------------
 
-# -- Drop rows button
-# dropRows_btn <- function(id)
-# {
-#   # namespace
-#   ns <- NS(id)
-#   
-#   # button
-#   actionButton(ns("dropRows"), label = "Drop rows")
-#   
-# }
+# -- ROC button
+getROC_btn <- function(id)
+{
+  # namespace
+  ns <- NS(id)
+
+  # button
+  actionButton(ns("roc_btn"), label = "ROC Curve")
+
+}
 
 
 # --------------------------------------------------------------------------------
@@ -87,6 +182,9 @@ reccurentCheck_Server <- function(id, r) {
     
     # get namespace
     ns <- session$ns
+    
+    # -- default threshold
+    r$threshold <- reactiveVal(NULL)
     
     # -- selected model (name and model)
     r$selectedModel <- reactiveVal(NULL)
@@ -102,6 +200,12 @@ reccurentCheck_Server <- function(id, r) {
     # -- predictions
     r$predictions <- reactiveVal(NULL)
     
+    # -- monitoring
+    r$monitoring <- reactiveVal(NULL)
+    
+    # -- plots
+    p_confusion <- reactiveVal(NULL)
+    
     
     # -------------------------------------
     # Outputs
@@ -110,9 +214,18 @@ reccurentCheck_Server <- function(id, r) {
     # -- select input (model list)
     output$model_select <- renderUI(selectInput(ns("model"), "Select model", choices = r$models()$Name))
     
+    # -- select threshold input (slider)
+    output$thresholdSlider <- renderUI(sliderInput(ns("thresholdSlider"), h3("Threshold"), 
+                                                   min = 0, max = 1, value = 0.5))
+    
+    
     # -- selected model name
-    output$summary <- renderUI(
-      wellPanel(r$selectedModel()))
+    output$summary <- renderUI(tagList(
+      h3(r$selectedModel()),
+      p("Description:"),
+      p(r$models()[r$models()$Name == r$selectedModel(), ]$Description),
+      p("Version:"),
+      p(r$models()[r$models()$Name == r$selectedModel(), ]$Version)))
     
     # -- Main table
     output$itemTable <- renderDT(r$test_ds(),
@@ -125,11 +238,48 @@ reccurentCheck_Server <- function(id, r) {
                                  rownames = FALSE,
                                  selection = 'single')
     
+    # -- ValueBox section --------------------
+    
     # -- number of observations
     output$nb_obs <- renderValueBox(
-      valueBox(dim(r$test_ds())[1], "Nb obs", width = 4)
+      valueBox(dim(r$test_ds())[1], "Nb obs", width = 4, color = "light-blue")
     )
     
+    # -- number of predictions OK
+    output$predictions_ok <- renderValueBox(
+      valueBox(r$monitoring()$Predictions.OK, "Predictions OK", width = 4, color = "light-blue")
+    )
+    
+    # -- number of predictions KO
+    output$predictions_ko <- renderValueBox(
+      valueBox(r$monitoring()$Predictions.KO, "Predictions KO", width = 4, color = "light-blue")
+    )
+    
+    # -- accuracy
+    output$accuracy <- renderValueBox(
+      valueBox(r$monitoring()$Accuracy, "Accuracy", width = 4, color = "light-blue")
+    )
+    
+    # -- precision
+    output$precision <- renderValueBox(
+      valueBox(r$monitoring()$Precision, "Precision", width = 4, color = "light-blue")
+    )
+    
+    # -- recall
+    output$recall <- renderValueBox(
+      valueBox(r$monitoring()$Recall, "Recall", width = 4, color = "light-blue")
+    )
+    
+    # -- F1 score
+    output$f1_score <- renderValueBox(
+      valueBox(r$monitoring()$F1.Score, "F1 Score", width = 4, color = "light-blue")
+    )
+    
+    
+    # -- Plot section --------------------
+    
+    # -- confusion matrix plot
+    output$confusion_plot <- renderPlot(p_confusion())
     
     
     # --------------------------------------------------------------------------
@@ -187,7 +337,7 @@ reccurentCheck_Server <- function(id, r) {
       
       # -- get values
       model <- r$model()
-      input_df <<- r$test_ds()
+      input_df <- r$test_ds()
       
       # -- set paramaters
       batch_size = 32 #default
@@ -209,9 +359,85 @@ reccurentCheck_Server <- function(id, r) {
     
     
     # -- predictions
-    observeEvent(r$predictions(), {
+    observeEvent({
+      r$predictions()
+      r$threshold()}, {
+        
+        # ** otherwise it's called when prediction is NULL (idk...)
+        req(r$predictions(), r$threshold())
+        
+        cat("observeEvent: predictions or threshold updated, computing metrics... \n")
+        
+        # -- get values
+        test_labels <- r$test_labels()
+        predictions <- r$predictions()
+        
+        # -- merge
+        df <- cbind(test_labels, predictions)
+        
+        # -- call evalution function
+        eval <- evaluateModel(df, r$threshold(), verbose = TRUE)
+        
+        # -- store
+        r$monitoring(eval)
+        
+        
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+    
+    
+    # -- test_ds
+    observeEvent(r$monitoring(), {
       
-      cat("observeEvent: test predictions updated, computing metrics... \n")
+      # get plot
+      p <- getConfusionPlot(obs = r$monitoring()$Observations,
+                            tp = r$monitoring()$True.Positive,
+                            fp = r$monitoring()$False.Positive,
+                            fn = r$monitoring()$False.Negative,
+                            tn = r$monitoring()$True.Negative)
+      
+      # -- strore
+      p_confusion(p)
+      
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
+    
+    
+    # --------------------------------------------------------------------------
+    # Observer inputs
+    # --------------------------------------------------------------------------
+    
+    # -- SelectInput: select model
+    observeEvent(input$model, {
+
+      # log
+      cat("Selected model = ", input$model, "\n")
+      
+      # store value
+      r$selectedModel(input$model)
+
+    })
+    
+    
+    # -- SliderInput: thresholdSlider
+    observeEvent(input$thresholdSlider, {
+      
+      # log
+      cat("Threshold = ", input$thresholdSlider, "\n")
+      
+      # store value
+      r$threshold(input$thresholdSlider)
+      
+    })
+    
+    
+    # --------------------------------------------------------------------------
+    # Observer buttons
+    # --------------------------------------------------------------------------
+    
+    # -- button: ROC Curve
+    observeEvent(input$roc_btn, {
+      
+      # log
+      cat("Computing ROC curve... \n")
       
       # -- get values
       test_labels <- r$test_labels()
@@ -220,25 +446,9 @@ reccurentCheck_Server <- function(id, r) {
       # -- merge
       df <- cbind(test_labels, predictions)
       
-      # -- call evalution function
-      eval <- evaluateModel(df)
-      
-      
-    }, ignoreInit = TRUE, ignoreNULL = TRUE)
-    
-    
-    # --------------------------------------------------------------------------
-    # Observer buttons
-    # --------------------------------------------------------------------------
-    
-    # -- Button: select model
-    observeEvent(input$model, {
-
-      # log
-      cat("Selected model = ", input$model, "\n")
-      
-      # store value
-      r$selectedModel(input$model)
+      # -- eval along threshold sequence
+      eval_list <- lapply(seq(0, 1, by = 0.05), function(x) evaluateModel(df, x))
+      eval_df <<- rbindlist(eval_list)
 
     })
     

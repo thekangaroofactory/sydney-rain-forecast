@@ -258,11 +258,41 @@ body <- dashboardBody(
         
         # TAB: Reccurent check
         tabItem(tabName = "reccurent",
+                
                 h2("Reccurent check"),
-                selectModel_INPUT("check"),
-                summary_UI("check"),
-                nbObs_UI("check"),
-                itemTable_UI("check")
+                
+                fluidRow(
+                    
+                    # input panel
+                    column(width = 4,
+                           wellPanel(
+                               selectModel_INPUT("check"),
+                               thresholdSlider_INPUT("check")
+                           )),
+                    
+                    column(width = 4,
+                        wellPanel(
+                            summary_UI("check"),
+                        )
+                    )),
+                
+                fluidRow(
+                    column(width = 3, nbObs_UI("check")),
+                    column(width = 3, nbPredictionOK_UI("check")),
+                    column(width = 3, nbPredictionKO_UI("check")),
+                    column(width = 3, accuracy_UI("check"))),
+                
+                box(width = 6, title = "Confusion Matrix", confusionPlot_UI("check")),
+                
+                fluidRow(
+                    column(width = 3, precision_UI("check")),
+                    column(width = 3, recall_UI("check")),
+                    column(width = 3, f1Score_UI("check"))),
+                
+                getROC_btn("check")
+                
+                
+                #itemTable_UI("check")
                 
         ) #tabItem -- ENDTAB: Reccurent check
         

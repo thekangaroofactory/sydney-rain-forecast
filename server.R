@@ -51,6 +51,8 @@ shinyServer(
         # - test_labels: labels for the test set (loaded from python preprocessed file)
         #
         # - predictions: computed predictions
+        # - monitoring: metrics of current model
+        
         
         r <- reactiveValues()
         
