@@ -287,9 +287,10 @@ body <- dashboardBody(
                 fluidRow(
                     column(width = 3, precision_UI("check")),
                     column(width = 3, recall_UI("check")),
-                    column(width = 3, f1Score_UI("check"))),
+                    column(width = 3, f1Score_UI("check")),
+                    column(width = 3, auc_UI("check"))),
                 
-                getROC_btn("check")
+                box(width = 6, title = "Confusion Matrix", rocPlot_UI("check"))
                 
                 
                 #itemTable_UI("check")

@@ -6,6 +6,8 @@
 
 # -- Library
 library(data.table)
+library(pROC)
+
 
 # --------------------------------------------------------------------------------
 # UI ITEMS SECTION
@@ -24,6 +26,8 @@ summary_UI <- function(id)
 }
 
 
+# -- Table section --------------------
+
 # -- DT table UI
 itemTable_UI <- function(id)
 {
@@ -36,6 +40,8 @@ itemTable_UI <- function(id)
   
 }
 
+
+# -- ValueBox section --------------------
 
 # -- Value box nb_obs
 nbObs_UI <- function(id){
@@ -114,6 +120,19 @@ f1Score_UI <- function(id){
   
 }
 
+# -- Value box AUC
+auc_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("auc"))
+  
+}
+
+
+# -- Plot section --------------------
 
 # -- Confusion matrix plot
 confusionPlot_UI <- function(id){
@@ -123,6 +142,18 @@ confusionPlot_UI <- function(id){
   
   # plot
   plotOutput (ns("confusion_plot"))
+  
+}
+
+
+# -- ROC curve plot
+rocPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput (ns("roc_plot"))
   
 }
 
@@ -162,15 +193,15 @@ thresholdSlider_INPUT <- function(id)
 # --------------------------------------------------------------------------------
 
 # -- ROC button
-getROC_btn <- function(id)
-{
-  # namespace
-  ns <- NS(id)
-
-  # button
-  actionButton(ns("roc_btn"), label = "ROC Curve")
-
-}
+# getROC_btn <- function(id)
+# {
+#   # namespace
+#   ns <- NS(id)
+# 
+#   # button
+#   actionButton(ns("roc_btn"), label = "ROC Curve")
+# 
+# }
 
 
 # --------------------------------------------------------------------------------
@@ -203,8 +234,12 @@ reccurentCheck_Server <- function(id, r) {
     # -- monitoring
     r$monitoring <- reactiveVal(NULL)
     
+    # -- AUC (Area Under the ROC Curve)
+    auc <- reactiveVal(NULL)
+    
     # -- plots
     p_confusion <- reactiveVal(NULL)
+    p_roc <- reactiveVal(NULL)
     
     
     # -------------------------------------
@@ -242,37 +277,42 @@ reccurentCheck_Server <- function(id, r) {
     
     # -- number of observations
     output$nb_obs <- renderValueBox(
-      valueBox(dim(r$test_ds())[1], "Nb obs", width = 4, color = "light-blue")
+      valueBox(dim(r$test_ds())[1], "Nb obs", width = 4, color = "purple")
     )
     
     # -- number of predictions OK
     output$predictions_ok <- renderValueBox(
-      valueBox(r$monitoring()$Predictions.OK, "Predictions OK", width = 4, color = "light-blue")
+      valueBox(r$monitoring()$Predictions.OK, "Predictions OK", width = 4, color = "purple")
     )
     
     # -- number of predictions KO
     output$predictions_ko <- renderValueBox(
-      valueBox(r$monitoring()$Predictions.KO, "Predictions KO", width = 4, color = "light-blue")
+      valueBox(r$monitoring()$Predictions.KO, "Predictions KO", width = 4, color = "purple")
     )
     
     # -- accuracy
     output$accuracy <- renderValueBox(
-      valueBox(r$monitoring()$Accuracy, "Accuracy", width = 4, color = "light-blue")
+      valueBox(r$monitoring()$Accuracy, "Accuracy", width = 4, color = "purple")
     )
     
     # -- precision
     output$precision <- renderValueBox(
-      valueBox(r$monitoring()$Precision, "Precision", width = 4, color = "light-blue")
+      valueBox(r$monitoring()$Precision, "Precision", width = 4, color = "purple")
     )
     
     # -- recall
     output$recall <- renderValueBox(
-      valueBox(r$monitoring()$Recall, "Recall", width = 4, color = "light-blue")
+      valueBox(r$monitoring()$Recall, "Recall", width = 4, color = "purple")
     )
     
     # -- F1 score
     output$f1_score <- renderValueBox(
-      valueBox(r$monitoring()$F1.Score, "F1 Score", width = 4, color = "light-blue")
+      valueBox(r$monitoring()$F1.Score, "F1 Score", width = 4, color = "purple")
+    )
+    
+    # -- AUC value
+    output$auc <- renderValueBox(
+      valueBox(auc(), "AUC", width = 4, color = "purple")
     )
     
     
@@ -280,6 +320,9 @@ reccurentCheck_Server <- function(id, r) {
     
     # -- confusion matrix plot
     output$confusion_plot <- renderPlot(p_confusion())
+    
+    # -- ROC curve plot
+    output$roc_plot <- renderPlot(p_roc())
     
     
     # --------------------------------------------------------------------------
@@ -299,7 +342,10 @@ reccurentCheck_Server <- function(id, r) {
       model <- loadTFmodel(path, file)
       
       # -- notify
-      showNotification("Model loaded.")
+      #showNotification("Model loaded.")
+      
+      # -- update progress
+      progress$inc(1/4, detail = "Load model: done")
       
       # -- store
       r$model(model)
@@ -321,6 +367,9 @@ reccurentCheck_Server <- function(id, r) {
       # -- split input and labels
       labels_df <- processed_df["RainTomorrow"]
       input_df <- processed_df[, !names(processed_df) %in% c("RainTomorrow")]
+      
+      # -- update progress
+      progress$inc(2/4, detail = "Load data: done")
       
       # -- store
       r$test_ds(input_df)
@@ -349,7 +398,9 @@ reccurentCheck_Server <- function(id, r) {
       colnames(raw_predictions) <- c("Raw.Prediction")
         
       # notify
-      showNotification("Compute prediction done.")
+      #showNotification("Compute prediction done.")
+      # -- update progress
+      progress$inc(3/4, detail = "Compute predictions: done")
       
       # -- store
       r$predictions(raw_predictions)
@@ -395,8 +446,46 @@ reccurentCheck_Server <- function(id, r) {
                             fn = r$monitoring()$False.Negative,
                             tn = r$monitoring()$True.Negative)
       
-      # -- strore
+      # -- store
       p_confusion(p)
+      
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      
+    
+    # -- test_ds
+    observeEvent(r$predictions(), {
+      
+      # log
+      cat("Computing ROC curve & AUC... \n")
+      
+      # -- get values
+      test_labels <- r$test_labels()
+      predictions <- r$predictions()
+      
+      # -- merge
+      to_eval_df <- cbind(test_labels, predictions)
+      
+      # -- eval along threshold sequence
+      eval_list <- lapply(seq(0, 1, by = 0.025), function(x) evaluateModel(to_eval_df, x))
+      eval_df <- rbindlist(eval_list)
+      
+      # -- reorder (to avoid geom_line to plot in wrong direction)
+      eval_df <- eval_df[with(eval_df, order(FP.Rate, TP.Rate)), ]
+      
+      # -- get ROC curve plot
+      p <- getROCPlot(eval_df)
+      
+      # -- get AUC value (explicit call to package to avoid conflict)
+      area_under_ROC <- pROC::auc(to_eval_df$RainTomorrow, to_eval_df$Raw.Prediction, levels=c(0, 1), direction = '<')
+      area_under_ROC <- round(area_under_ROC, digits = 3)
+      
+      # -- update progress
+      progress$inc(4/4, detail = "Evaluate model: done")
+      
+      # -- store
+      p_roc(p)
+      auc(area_under_ROC)
+      
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
@@ -410,6 +499,13 @@ reccurentCheck_Server <- function(id, r) {
 
       # log
       cat("Selected model = ", input$model, "\n")
+      
+      # Create a Progress object
+      progress <- shiny::Progress$new()
+      # Make sure it closes when we exit this reactive, even if there's an error
+      #on.exit(progress$close())
+      # Init
+      progress$set(message = "Loading model...", value = 0)
       
       # store value
       r$selectedModel(input$model)
@@ -433,24 +529,6 @@ reccurentCheck_Server <- function(id, r) {
     # Observer buttons
     # --------------------------------------------------------------------------
     
-    # -- button: ROC Curve
-    observeEvent(input$roc_btn, {
-      
-      # log
-      cat("Computing ROC curve... \n")
-      
-      # -- get values
-      test_labels <- r$test_labels()
-      predictions <- r$predictions()
-      
-      # -- merge
-      df <- cbind(test_labels, predictions)
-      
-      # -- eval along threshold sequence
-      eval_list <- lapply(seq(0, 1, by = 0.05), function(x) evaluateModel(df, x))
-      eval_df <<- rbindlist(eval_list)
-
-    })
     
     
     # --------------------------------------------------------------------------
