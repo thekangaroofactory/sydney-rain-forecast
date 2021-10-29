@@ -7,6 +7,7 @@
 # -- Library
 library(data.table)
 library(pROC)
+library(shinyWidgets)
 
 
 # --------------------------------------------------------------------------------
@@ -214,6 +215,10 @@ reccurentCheck_Server <- function(id, r) {
     # get namespace
     ns <- session$ns
     
+    # -- ProgressBar
+    trigger_progress <- reactiveVal(-1)
+    trigger_nb_steps <- reactiveVal(0)
+    
     # -- default threshold
     r$threshold <- reactiveVal(NULL)
     
@@ -345,7 +350,7 @@ reccurentCheck_Server <- function(id, r) {
       #showNotification("Model loaded.")
       
       # -- update progress
-      progress$inc(1/4, detail = "Load model: done")
+      trigger_progress(1)
       
       # -- store
       r$model(model)
@@ -369,7 +374,7 @@ reccurentCheck_Server <- function(id, r) {
       input_df <- processed_df[, !names(processed_df) %in% c("RainTomorrow")]
       
       # -- update progress
-      progress$inc(2/4, detail = "Load data: done")
+      trigger_progress(2)
       
       # -- store
       r$test_ds(input_df)
@@ -400,7 +405,7 @@ reccurentCheck_Server <- function(id, r) {
       # notify
       #showNotification("Compute prediction done.")
       # -- update progress
-      progress$inc(3/4, detail = "Compute predictions: done")
+      trigger_progress(3)
       
       # -- store
       r$predictions(raw_predictions)
@@ -480,7 +485,7 @@ reccurentCheck_Server <- function(id, r) {
       area_under_ROC <- round(area_under_ROC, digits = 3)
       
       # -- update progress
-      progress$inc(4/4, detail = "Evaluate model: done")
+      trigger_progress(4)
       
       # -- store
       p_roc(p)
@@ -501,12 +506,9 @@ reccurentCheck_Server <- function(id, r) {
       cat("Selected model = ", input$model, "\n")
       
       # Create a Progress object
-      progress <- shiny::Progress$new()
-      # Make sure it closes when we exit this reactive, even if there's an error
-      #on.exit(progress$close())
-      # Init
-      progress$set(message = "Loading model...", value = 0)
-      
+      trigger_progress(0)
+      trigger_nb_steps(4)
+
       # store value
       r$selectedModel(input$model)
 
@@ -530,6 +532,36 @@ reccurentCheck_Server <- function(id, r) {
     # --------------------------------------------------------------------------
     
     
+    
+    # --------------------------------------------------------------------------
+    # ProgressBar 
+    # --------------------------------------------------------------------------
+    
+    observeEvent(trigger_progress(), {
+      
+      # -- log
+      cat("Trigger_progress =", trigger_progress(), "\n")
+      
+      # -- check progress trigger
+      if(trigger_progress() == 0){
+        
+        # -- set progress bar
+        progressSweetAlert(id = "progress", session = session, value = 0, total = trigger_nb_steps(), display_pct = TRUE, striped = TRUE, title = "Evaluating model")
+        
+      } else {
+        
+        # -- update progress
+        updateProgressBar(session, "progress", value = trigger_progress(), total = trigger_nb_steps())
+      }
+      
+      # -- check final step
+      if(trigger_progress() == trigger_nb_steps()){
+        closeSweetAlert(session)
+        trigger_progress(-1)
+        trigger_nb_steps(0)
+      }
+      
+    }, ignoreInit = TRUE)
     
     # --------------------------------------------------------------------------
     

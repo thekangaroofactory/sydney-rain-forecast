@@ -35,6 +35,8 @@ sidebar <- dashboardSidebar(
 # Body
 body <- dashboardBody(
     
+    useSweetAlert("material-ui", ie = TRUE),
+    
     tabItems(
         
         # TAB: Dashboard
@@ -282,15 +284,15 @@ body <- dashboardBody(
                     column(width = 3, nbPredictionKO_UI("check")),
                     column(width = 3, accuracy_UI("check"))),
                 
-                box(width = 6, title = "Confusion Matrix", confusionPlot_UI("check")),
+                fluidRow(
+                    column(width = 6, box(width = 12, title = "Confusion Matrix", confusionPlot_UI("check"))),
+                    column(width = 6, precision_UI("check"),
+                           recall_UI("check"),
+                           f1Score_UI("check"))),
                 
                 fluidRow(
-                    column(width = 3, precision_UI("check")),
-                    column(width = 3, recall_UI("check")),
-                    column(width = 3, f1Score_UI("check")),
-                    column(width = 3, auc_UI("check"))),
-                
-                box(width = 6, title = "Confusion Matrix", rocPlot_UI("check"))
+                    column(width = 6, box(width = 12, title = "Confusion Matrix", rocPlot_UI("check"))),
+                    column(width = 6, auc_UI("check")))
                 
                 
                 #itemTable_UI("check")
