@@ -269,14 +269,15 @@ body <- dashboardBody(
                     column(width = 4,
                            wellPanel(
                                selectModel_INPUT("check"),
-                               thresholdSlider_INPUT("check")
-                           )),
+                               thresholdSlider_INPUT("check"))),
                     
                     column(width = 4,
                         wellPanel(
-                            summary_UI("check"),
-                        )
-                    )),
+                            summary_UI("check"))),
+                        
+                        column(width = 4,
+                               wellPanel(
+                                   h3("Test data")))),
                 
                 fluidRow(
                     column(width = 3, nbObs_UI("check")),

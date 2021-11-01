@@ -142,7 +142,7 @@ confusionPlot_UI <- function(id){
   ns <- NS(id)
   
   # plot
-  plotOutput (ns("confusion_plot"))
+  plotOutput(ns("confusion_plot"), width = "400px", height = "400px")
   
 }
 
@@ -154,7 +154,7 @@ rocPlot_UI <- function(id){
   ns <- NS(id)
   
   # plot
-  plotOutput (ns("roc_plot"))
+  plotOutput(ns("roc_plot"), width = "400px", height = "400px")
   
 }
 
