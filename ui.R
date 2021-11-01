@@ -28,7 +28,7 @@ sidebar <- dashboardSidebar(
         menuItem("Dataset", tabName = "dataset", icon = icon("file")),
         menuItem("Exploratory Analysis", tabName = "analyze", icon = icon("file")),
         menuItem("Missing values", tabName = "nan", icon = icon("file")),
-        menuItem("Reccurent check", tabName = "reccurent", icon = icon("file"))
+        menuItem("Monitoring", tabName = "monitoring", icon = icon("file"))
     )
 )
 
@@ -55,9 +55,9 @@ body <- dashboardBody(
                         tags$li("Load dataset, preprocess"),
                         tags$li(span("Exploratory Analysis ~InWork", style = "color:blue")),
                         tags$li(span("Missing values ~Draft", style = "color:blue")),
-                        tags$li(span("Feature engineering ~NotStarted", style = "color:grey; font-style: italic")),
-                        tags$li(span("Train model ~NotStarted", style = "color:grey; font-style: italic")),
-                        tags$li(span("...", style = "color:grey; font-style: italic"))
+                        tags$li(span("Feature engineering ~NotImplemented", style = "color:grey; font-style: italic")),
+                        tags$li(span("Train model ~NotImplemented", style = "color:grey; font-style: italic")),
+                        tags$li(span("Monitoring ~InWork", style = "color:blue"))
                     ),
                     
                     h3("How it works"),
@@ -258,10 +258,10 @@ body <- dashboardBody(
         ), #tabItem -- ENDTAB: Missing values
         
         
-        # TAB: Reccurent check
-        tabItem(tabName = "reccurent",
+        # TAB: Monitoring
+        tabItem(tabName = "monitoring",
                 
-                h2("Reccurent check"),
+                h2("Monitoring"),
                 
                 fluidRow(
                     
@@ -291,7 +291,7 @@ body <- dashboardBody(
                            f1Score_UI("check"))),
                 
                 fluidRow(
-                    column(width = 6, box(width = 12, title = "Confusion Matrix", rocPlot_UI("check"))),
+                    column(width = 6, box(width = 12, title = "ROC Curve", rocPlot_UI("check"))),
                     column(width = 6, auc_UI("check")))
                 
                 
