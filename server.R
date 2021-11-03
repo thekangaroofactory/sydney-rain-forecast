@@ -43,17 +43,6 @@ shinyServer(
         
         # declare r communication object
         # ----------------------------------------------------------------------
-        # - models: list of models
-        # - selectedModel: active model name
-        # - model: model (.h5)
-        #
-        # - test_ds: test set (loaded from python preprocessed file)
-        # - test_labels: labels for the test set (loaded from python preprocessed file)
-        #
-        # - predictions: computed predictions
-        # - monitoring: metrics of current model
-        
-        
         r <- reactiveValues()
         
         

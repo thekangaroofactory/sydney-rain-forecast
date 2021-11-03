@@ -1,19 +1,18 @@
 
 
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Shiny module: Reccurent check
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # -- Library
 library(data.table)
-library(pROC)
 library(PRROC)
 library(shinyWidgets)
 
 
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # UI ITEMS SECTION
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # -- Summary
 summary_UI <- function(id){
@@ -51,6 +50,17 @@ nbObs_UI <- function(id){
   
   # box
   uiOutput(ns("nb_obs"))
+  
+}
+
+# -- Value box nb_select_obs
+nbSelectedObs_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("nb_select_obs"))
   
 }
 
@@ -179,9 +189,9 @@ prPlot_UI <- function(id){
 }
 
 
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # INPUT ITEMS SECTION
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # -- Select model input
 selectModel_INPUT <- function(id){
@@ -217,50 +227,55 @@ dateRange_INPUT <- function(id){
 }
 
 
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # BUTTON ITEMS SECTION
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Server logic
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 reccurentCheck_Server <- function(id, r) {
   moduleServer(id, function(input, output, session) {
     
-    # get namespace
+    cat("Starting reccurentCheck server... \n")
+    
+    # -- get namespace
     ns <- session$ns
     
-    # -- ProgressBar
+    # --------------------------------------------------------------------------
+    # Declare objects
+    # --------------------------------------------------------------------------
+    
+    # -- ProgressBar triggers
     trigger_progress <- reactiveVal(-1)
     trigger_nb_steps <- reactiveVal(0)
     trigger_title <- reactiveVal(NULL)
     
-    # -- selected model (name and model)
-    r$selectedModel <- reactiveVal(NULL)
-    r$model <- reactiveVal(NULL)
+    # -- Loaded model (.h5 format)
+    tf_model <- reactiveVal(NULL)
     
-    # -- load model list from folder
-    r$models <- reactiveVal(read.csv(file.path(path$model, file$model_list), header = TRUE))
+    # -- Model list
+    model_list <- reactiveVal()
     
     # -- input data for prediction
-    r$test_ds <- reactiveVal(NULL)
-    r$test_labels <- reactiveVal(NULL)
+    test_ds <- reactiveVal(NULL)
+    test_labels <- reactiveVal(NULL)
     
     # -- subset index data (date range)
-    subset_index <- reactiveVal(NULL)
+    subset_index_list <- reactiveVal(NULL)
     
-    # -- formated data (to retireve dates)
+    # -- formatted data (to retrieve dates)
     formated_ds <- reactiveVal(NULL)
     
     # -- predictions
-    r$predictions <- reactiveVal(NULL)
+    predictions <- reactiveVal(NULL)
     
     # -- monitoring
-    r$monitoring <- reactiveVal(NULL)
+    monitoring <- reactiveVal(NULL)
     
-    # -- AUC (Area Under Curves)
+    # -- AUC values (Area Under Curves)
     auc_roc <- reactiveVal(NULL)
     auc_pr <- reactiveVal(NULL)
     
@@ -269,43 +284,57 @@ reccurentCheck_Server <- function(id, r) {
     p_roc <- reactiveVal(NULL)
     p_pr <- reactiveVal(NULL)
     
+    # -- date range
+    date_min <- NULL
+    date_max <- NULL
     
-    # -- load formated dataset (to get dates)
+    
+    # --------------------------------------------------------------------------
+    # Code to be run once
+    # --------------------------------------------------------------------------
+    
+    # -- load model list from folder & store
+    list <- read.csv(file.path(path$model, file$model_list), header = TRUE)
+    cat("Model list loaded, size =", dim(list)[1], "\n")
+    model_list(list)
+    
+    # -- load pre-formatted dataset & store
     formated_df <- read.csv(file.path(path$formated, file$formated), header = TRUE)
     formated_df$Date <- as.Date(formated_df$Date, format = "%Y-%m-%d")
-    
-    # -- store
+    cat("Test dataset loaded, size =", dim(formated_df), "\n")
     formated_ds(formated_df)
     
-    # -- get min max date range
+    # -- get min & max date range
     date_min <- min(formated_df$Date)
     date_max <- max(formated_df$Date)
     
     
-    # -------------------------------------
-    # Outputs
-    # -------------------------------------
+    # --------------------------------------------------------------------------
+    # OUPUTS SECTION
+    # --------------------------------------------------------------------------
     
-    # -- INPUT section --------------------
+    # -- INPUT widgets --------------------
     
     # -- select input (model list)
-    output$model_select <- renderUI(selectInput(ns("model"), "Select model", choices = r$models()$Name))
+    output$model_select <- renderUI(selectInput(ns("selected_model"), h3("Select model"), choices = model_list()$Name))
     
     # -- select threshold input (slider)
-    output$thresholdSlider <- renderUI(sliderInput(ns("thresholdSlider"), h3("Threshold"), 
+    output$thresholdSlider <- renderUI(sliderInput(ns("thresholdSlider"), label = h3("Threshold"), 
                                                    min = 0, max = 1, value = 0.5))
     
     # -- select date range input
-    output$date_range <- renderUI(dateRangeInput(ns("date_range"), label = "Select date", start = date_min, end = date_max, min = date_min, max = date_max))
+    output$date_range <- renderUI(dateRangeInput(ns("date_range"), label = h3("Date range"), 
+                                                 start = date_min, end = date_max, min = date_min, max = date_max))
     
-    # -- UI section --------------------
+    
+    # -- Text & Table --------------------
     
     # -- selected model name
     output$summary <- renderUI(tagList(
-      p("Name:", r$selectedModel()),
+      p("Name:", input$selected_model),
+      p("Version:", model_list()[model_list()$Name == input$selected_model, ]$Version),
       p("Description:"),
-      p(r$models()[r$models()$Name == r$selectedModel(), ]$Description),
-      p("Version:", r$models()[r$models()$Name == r$selectedModel(), ]$Version)))
+      p(model_list()[model_list()$Name == input$selected_model, ]$Description)))
       
     
     # -- Main table
@@ -319,41 +348,46 @@ reccurentCheck_Server <- function(id, r) {
                                  rownames = FALSE,
                                  selection = 'single')
     
-    # -- ValueBox section --------------------
+    # -- ValueBox objects --------------------
     
     # -- number of observations
     output$nb_obs <- renderValueBox(
-      valueBox(dim(r$test_ds())[1], "Nb obs", width = 4, color = "purple")
+      valueBox(dim(test_ds())[1], "Nb obs", width = 4, color = "purple")
+    )
+    
+    # -- number of selected observations
+    output$nb_select_obs <- renderValueBox(
+      valueBox(sum(subset_index_list()), "Nb selected obs", width = 4, color = "purple")
     )
     
     # -- number of predictions OK
     output$predictions_ok <- renderValueBox(
-      valueBox(r$monitoring()$Predictions.OK, "Predictions OK", width = 4, color = "purple")
+      valueBox(monitoring()$Predictions.OK, "Predictions OK", width = 4, color = "purple")
     )
     
     # -- number of predictions KO
     output$predictions_ko <- renderValueBox(
-      valueBox(r$monitoring()$Predictions.KO, "Predictions KO", width = 4, color = "purple")
+      valueBox(monitoring()$Predictions.KO, "Predictions KO", width = 4, color = "purple")
     )
     
     # -- accuracy
     output$accuracy <- renderValueBox(
-      valueBox(r$monitoring()$Accuracy, "Accuracy", width = 4, color = "purple")
+      valueBox(monitoring()$Accuracy, "Accuracy", width = 4, color = "purple")
     )
     
     # -- precision
     output$precision <- renderValueBox(
-      valueBox(r$monitoring()$Precision, "Precision", width = 4, color = "purple")
+      valueBox(monitoring()$Precision, "Precision", width = 4, color = "purple")
     )
     
     # -- recall
     output$recall <- renderValueBox(
-      valueBox(r$monitoring()$Recall, "Recall", width = 4, color = "purple")
+      valueBox(monitoring()$Recall, "Recall", width = 4, color = "purple")
     )
     
     # -- F1 score
     output$f1_score <- renderValueBox(
-      valueBox(r$monitoring()$F1.Score, "F1 Score", width = 4, color = "purple")
+      valueBox(monitoring()$F1.Score, "F1 Score", width = 4, color = "purple")
     )
     
     # -- AUC ROC value
@@ -367,7 +401,7 @@ reccurentCheck_Server <- function(id, r) {
     )
     
     
-    # -- Plot section --------------------
+    # -- Plot objects --------------------
     
     # -- confusion matrix plot
     output$confusion_plot <- renderPlot(p_confusion())
@@ -380,188 +414,109 @@ reccurentCheck_Server <- function(id, r) {
     
     
     # --------------------------------------------------------------------------
-    # Observer values
+    # OBSERVERS SECTION
     # --------------------------------------------------------------------------
 
-    # -- selectedModel
-    observeEvent(r$selectedModel(), {
-
-      cat("observeEvent: selectedModel updated \n")
-
-      # -- update progress
-      trigger_title("Loading ML model...")
-      trigger_progress(trigger_progress() + 1)
-      
-      # -- prepare
-      path <- path$model
-      file <- r$models()[r$models()$Name == r$selectedModel(), ]$File
-      
-      # -- load model
-      model <- loadTFmodel(path, file)
-      
-      # -- notify
-      #showNotification("Model loaded.")
-      
-      # -- store
-      r$model(model)
-
-    }, ignoreInit = TRUE, ignoreNULL = TRUE)
+    # --------------------------------------------------------------------------
+    # Input Observers
+    # --------------------------------------------------------------------------
     
-   
-    # -- model
-    observeEvent(r$model(), {
+    # -- Observe selectInput: selected_model
+    observeEvent(input$selected_model, {
+
+      cat("[observeEvent] New selected_model input value =", input$selected_model, "\n")
+
+      # -- get model file name
+      model_file <- model_list()[model_list()$Name == input$selected_model, ]$File
       
-      cat("observeEvent: .h5 model file loaded. \n")
+      # -- load model & store
+      cat("  - Load TF model from file \n")
+      model <- loadTFmodel(path$model, model_file)
+      tf_model(model)
+
       
-      # -- update progress
-      trigger_title("Loading test data...")
-      trigger_progress(trigger_progress() + 1)
-      
-      # -- get preprocessed data file name
-      file_name <- r$models()[r$models()$Name == r$selectedModel(), ]$Input
+      # -- get pre-processed data file name
+      data_file <- model_list()[model_list()$Name == input$selected_model, ]$Input
       
       # -- load data
-      processed_df <- readProcessedData(path$processed, file_name)
+      cat("  - Read pre-processed dataset from file \n")
+      processed_df <- readProcessedData(path$processed, data_file)
       
       # -- split input and labels
       labels_df <- processed_df["RainTomorrow"]
       input_df <- processed_df[, !names(processed_df) %in% c("RainTomorrow")]
       
       # -- store
-      r$test_ds(input_df)
-      r$test_labels(labels_df)
+      test_ds(input_df)
+      test_labels(labels_df)
+      
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
     
-    # -- input$date_range
+    # -- Observe dateRangeInput: date_range
     observeEvent(input$date_range, {
       
-      cat("Date Range min =", as.Date(input$date_range[[1]]), "\n")
-      cat("Date Range max =", as.Date(input$date_range[[2]]), "\n")
+      cat("[observeEvent] New date_range input value =", input$date_range, "\n")
       
       # -- get indexes matching date range
       index <- formated_ds()$Date >= input$date_range[[1]] & formated_ds()$Date <= input$date_range[[2]]
-      cat("Selected rows = ", sum(index), "\n")
+      cat("  - Selected rows = ", sum(index), "\n")
       
-      # -- subset and store
-      subset_index(index)
+      # -- store
+      subset_index_list(index)
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
     
-    # -- test_ds
-    observeEvent(r$test_ds(), {
+    # --------------------------------------------------------------------------
+    # Observer buttons
+    # --------------------------------------------------------------------------
+    
+    
+    # --------------------------------------------------------------------------
+    # reactiveVal Observers
+    # --------------------------------------------------------------------------
+    
+    # -- Observe reactiveVal: test_ds (tf_model and test_ds are updated in same bloc, hence following last one)
+    observeEvent(test_ds(), {
       
-      cat("observeEvent: test dataset updated, computing predictions... \n")
-      
-      # -- update progress
-      trigger_title("Computing predictions...")
-      trigger_progress(trigger_progress() + 1)
+      cat("[observeEvent] Model & test dataset updated \n")
       
       # -- get values
-      model <- r$model()
-      input_df <- r$test_ds()
+      model <- tf_model()
+      input_df <- test_ds()
       
-      # -- set paramaters
+      # -- set parameters
       batch_size = 32 #default
       verbose = 1
       
-      # -- call prediction function
+      # -- make predictions
+      cat("  - Compute predictions \n")
       raw_predictions <- makePrediction(model, input_df, batch_size = batch_size, verbose = verbose, steps = NULL, callbacks = NULL)
       raw_predictions <- as.data.frame(raw_predictions)
       colnames(raw_predictions) <- c("Raw.Prediction")
-        
-      # notify
-      #showNotification("Compute prediction done.")
       
       # -- store
-      r$predictions(raw_predictions)
-      
-      
-      # -- update progress
-      trigger_title("Computing ROC & AUC...")
-      trigger_progress(trigger_progress() + 1)
-      
-      
-    }, ignoreInit = TRUE, ignoreNULL = TRUE)
-    
-    
-    # -- predictions
-    observeEvent({
-      r$predictions()
-      input$thresholdSlider
-      subset_index()
-      auc_roc()}, {
-        
-        # ** otherwise it's called when prediction is NULL (idk...)
-        # ** adding auc_roc() as a trigger to for progress order
-        req(r$predictions(), input$thresholdSlider, auc_roc())
-        
-        cat("observeEvent: updating metrics... \n")
-        
-        # -- update progress
-        if(trigger_progress() != -1){
-          trigger_title("Computing metrics...")
-          trigger_progress(trigger_progress() + 1)
-        }
-        
-        # -- get values
-        test_labels <- r$test_labels()[subset_index(), ]
-        str(test_labels)
-        predictions <- r$predictions()[subset_index(), ]
-        str(predictions)
-        
-        # -- merge
-        df <- cbind(test_labels, predictions)
-        str(df)
-        
-        # -- call evalution function
-        eval <- evaluateModel(df, input$thresholdSlider, verbose = TRUE)
-        
-        # -- store
-        r$monitoring(eval)
-        
-        
-      }, ignoreInit = TRUE, ignoreNULL = TRUE)
-    
-    
-    # -- test_ds
-    observeEvent(r$monitoring(), {
-      
-      # get plot
-      p <- getConfusionPlot(obs = r$monitoring()$Observations,
-                            tp = r$monitoring()$True.Positive,
-                            fp = r$monitoring()$False.Positive,
-                            fn = r$monitoring()$False.Negative,
-                            tn = r$monitoring()$True.Negative)
-      
-      # -- store
-      p_confusion(p)
-      
-      # -- update progress
-      if(trigger_progress() != -1){
-        trigger_progress(trigger_progress() + 1)
-      }
-      
+      predictions(raw_predictions)
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
     
-    # -- predictions
-    observeEvent(r$predictions(), {
+    # -- Observe reactiveVal: predictions
+    observeEvent(predictions(), {
       
-      # --log
-      cat("Computing evaluation... \n")
+      cat("[observeEvent] New predictions available \n")
       
       # -- get values
-      test_labels <- r$test_labels()
-      predictions <- r$predictions()
+      test_labels <- test_labels()
+      predictions <- predictions()
       
       # -- merge
       to_eval_df <- cbind(test_labels, predictions)
       
       # -- eval along threshold sequence
+      cat("  - Evaluating model along threshold sequence... \n")
       eval_list <- lapply(seq(0, 1, by = 0.025), function(x) evaluateModel(to_eval_df, x))
       eval_df <- rbindlist(eval_list)
       
@@ -570,32 +525,32 @@ reccurentCheck_Server <- function(id, r) {
       eval_df <- eval_df[with(eval_df, order(FP.Rate, TP.Rate)), ]
       
       # -- get ROC curve plot
+      cat("  - Make ROC Curve plot \n")
       p1 <- getROCPlot(eval_df)
-      
-      # -- get AUC value (explicit call to package to avoid conflict)
-      area_under_ROC <- pROC::auc(to_eval_df$RainTomorrow, to_eval_df$Raw.Prediction, levels=c(0, 1), direction = '<')
-      
-      # ROC Curve    
-      # roc <- roc.curve(scores.class0 = fg, scores.class1 = bg, curve = T)
+    
+      # -- prepare for AUC
+      fg <- to_eval_df[to_eval_df$RainTomorrow == 1, ]$Raw.Prediction
+      bg <- to_eval_df[to_eval_df$RainTomorrow == 0, ]$Raw.Prediction
+        
+      # AUC ROC Curve    
+      cat("  - Compute AUC ROC Curve value \n")
+      roc <- roc.curve(scores.class0 = fg, scores.class1 = bg, curve = FALSE)
+      str(roc)
       
       # -- store
       p_roc(p1)
-      auc_roc(round(area_under_ROC, digits = 3))
+      auc_roc(round(roc$auc, digits = 3))
       
-      # --log
-      cat("ROC curve & AUC done. \n")
       
       # ---- 2. Precision/Recall & AUC
       
       # -- get Precision/Recall curve plot
+      cat("  - Make PR Curve plot \n")
       p2 <- getPrecRecallPlot(eval_df)
       
-      # -- get AUC value
-      fg <- to_eval_df[to_eval_df$RainTomorrow == 1, ]$Raw.Prediction
-      bg <- to_eval_df[to_eval_df$RainTomorrow == 0, ]$Raw.Prediction
-      
       # -- compute AUC PR
-      pr <- pr.curve(scores.class0 = fg, scores.class1 = bg, curve = F)
+      cat("  - Compute AUC PR Curve value \n")
+      pr <- pr.curve(scores.class0 = fg, scores.class1 = bg, curve = FALSE)
       
       # -- store
       p_pr(p2)
@@ -605,34 +560,52 @@ reccurentCheck_Server <- function(id, r) {
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
     
+    # -- Observe reactiveVal: predictions, subset_index_list and input: thresholdSlider
+    observeEvent({
+      predictions()
+      input$thresholdSlider
+      subset_index_list()
+      }, {
+        
+        # ** otherwise it's called when prediction is NULL (idk...)
+        req(predictions(), input$thresholdSlider, subset_index_list())
+        
+        cat("[observeEvent] Need to update metrics... \n")
+        
+        # -- get values
+        test_labels <- test_labels()
+        predictions <- predictions()
+        
+        # -- merge
+        df_to_eval <- cbind(test_labels, predictions)
+        
+        # -- subset give subset_index_list
+        df_to_eval <- df_to_eval[subset_index_list(), ]
+        
+        # -- call evaluation function
+        cat("  - Evaluate selected predictions \n")
+        eval <- evaluateModel(df_to_eval, input$thresholdSlider, verbose = TRUE)
+        
+        # -- store
+        monitoring(eval)
+        
+        # get plot
+        cat("  - Make confusion matrix plot \n")
+        p <- getConfusionPlot(obs = monitoring()$Observations,
+                              tp = monitoring()$True.Positive,
+                              fp = monitoring()$False.Positive,
+                              fn = monitoring()$False.Negative,
+                              tn = monitoring()$True.Negative)
+        
+        # -- store
+        p_confusion(p)
+        
+        
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+    
+ 
     # --------------------------------------------------------------------------
-    # Observer inputs
-    # --------------------------------------------------------------------------
-    
-    # -- SelectInput: select model
-    observeEvent(input$model, {
-
-      # log
-      cat("Selected model = ", input$model, "\n")
-      
-      # Create a Progress object
-      trigger_progress(0)
-      trigger_nb_steps(6)
-
-      # store value
-      r$selectedModel(input$model)
-
-    })
-    
-    
-    # --------------------------------------------------------------------------
-    # Observer buttons
-    # --------------------------------------------------------------------------
-    
-    
-    
-    # --------------------------------------------------------------------------
-    # ProgressBar 
+    # ProgressBar component
     # --------------------------------------------------------------------------
     
     observeEvent(trigger_progress(), {

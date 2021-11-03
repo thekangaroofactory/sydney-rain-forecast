@@ -268,7 +268,6 @@ body <- dashboardBody(
                     
                     column(width = 6, 
                            wellPanel(
-                               h3("Model"),
                                selectModel_INPUT("check"),
                                summary_UI("check"))),
                     
@@ -277,13 +276,13 @@ body <- dashboardBody(
                                h3("Test data"),
                                p("The test dataset is made of Sydney weather observations collected from the Australian BOM since Septembre, 2019.
                                  It is (for now) manually downloaded and pre-processed using python scripts on monthly basis."),
-                               nbObs_UI("check"),
-                               dateRange_INPUT("check")))),
+                               nbObs_UI("check")))),
                 
                 wellPanel(
                     fluidRow(
-                        h3("Observations"),
-                        itemTable_UI("check"))),
+                        column(width = 12, 
+                               h3("Observations"),
+                               itemTable_UI("check")))),
                 
                 
                 # -- 2nd row: ROC Curve & AUC
@@ -318,19 +317,32 @@ body <- dashboardBody(
                 
                 wellPanel(
                     
+                    # -- introduction
+                    fluidRow(
+                        column(width = 6, 
+                               h3("Playground"),
+                               tags$ul(
+                                   tags$li("Select threshold to turn raw predictions into binary values (No rain / Rain),"),
+                                   tags$li("Select date range to focus on a specific period of time.")))),
+                    
+                    
                     # -- input
                     fluidRow(
                         column(width = 3, 
-                               thresholdSlider_INPUT("check"),
-                               p("Select threshold to turn raw values into binary predictions (No rain / Rain)"))),
+                               thresholdSlider_INPUT("check")),
+                        column(width = 4,
+                               dateRange_INPUT("check"))),
                         
                     
                     # -- accuracy
                     fluidRow(
-                        h3("Predictions & Accuracy"),
+                        column(width = 6,
+                               h3("Predictions & Accuracy"))),
+                    fluidRow(
+                        column(width = 3, nbSelectedObs_UI("check")),
                         column(width = 3, nbPredictionOK_UI("check")),
                         column(width = 3, nbPredictionKO_UI("check")),
-                        column(width = 6, accuracy_UI("check"))),
+                        column(width = 3, accuracy_UI("check"))),
                     
                     # -- confusion matrix
                     fluidRow(
