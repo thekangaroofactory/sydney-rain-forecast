@@ -251,7 +251,7 @@ reccurentCheck_Server <- function(id, r) {
     # -- ProgressBar triggers
     trigger_progress <- reactiveVal(-1)
     trigger_nb_steps <- reactiveVal(0)
-    trigger_title <- reactiveVal(NULL)
+    pb_debug = FALSE #debug add 1s sleep!
     
     # -- Loaded model (.h5 format)
     tf_model <- reactiveVal(NULL)
@@ -425,6 +425,9 @@ reccurentCheck_Server <- function(id, r) {
     observeEvent(input$selected_model, {
 
       cat("[observeEvent] New selected_model input value =", input$selected_model, "\n")
+      
+      # -- init progressBar
+      setProgress(value = 0, total = 6, title = "Loading TensorFlow model...")
 
       # -- get model file name
       model_file <- model_list()[model_list()$Name == input$selected_model, ]$File
@@ -434,6 +437,9 @@ reccurentCheck_Server <- function(id, r) {
       model <- loadTFmodel(path$model, model_file)
       tf_model(model)
 
+
+      # -- update progressBar
+      updateProgress(title = "Loading pre-processed data...", debug = pb_debug)
       
       # -- get pre-processed data file name
       data_file <- model_list()[model_list()$Name == input$selected_model, ]$Input
@@ -483,6 +489,9 @@ reccurentCheck_Server <- function(id, r) {
       
       cat("[observeEvent] Model & test dataset updated \n")
       
+      # -- update progressBar
+      updateProgress(title = "Making predictions...", debug = pb_debug)
+      
       # -- get values
       model <- tf_model()
       input_df <- test_ds()
@@ -508,6 +517,9 @@ reccurentCheck_Server <- function(id, r) {
       
       cat("[observeEvent] New predictions available \n")
       
+      # -- update progressBar
+      updateProgress(title = "Evaluating model...", debug = pb_debug)
+      
       # -- get values
       test_labels <- test_labels()
       predictions <- predictions()
@@ -521,6 +533,10 @@ reccurentCheck_Server <- function(id, r) {
       eval_df <- rbindlist(eval_list)
       
       # ---- 1. ROC & AUC
+      
+      # -- update progressBar
+      updateProgress(title = "Building ROC Curve...", debug = pb_debug)
+      
       # -- reorder (to avoid geom_line to plot in wrong direction)
       eval_df <- eval_df[with(eval_df, order(FP.Rate, TP.Rate)), ]
       
@@ -535,7 +551,6 @@ reccurentCheck_Server <- function(id, r) {
       # AUC ROC Curve    
       cat("  - Compute AUC ROC Curve value \n")
       roc <- roc.curve(scores.class0 = fg, scores.class1 = bg, curve = FALSE)
-      str(roc)
       
       # -- store
       p_roc(p1)
@@ -543,6 +558,9 @@ reccurentCheck_Server <- function(id, r) {
       
       
       # ---- 2. Precision/Recall & AUC
+      
+      # -- update progressBar
+      updateProgress(title = "Building PR Curve...", debug = pb_debug)
       
       # -- get Precision/Recall curve plot
       cat("  - Make PR Curve plot \n")
@@ -555,6 +573,10 @@ reccurentCheck_Server <- function(id, r) {
       # -- store
       p_pr(p2)
       auc_pr(round(pr$auc.integral, digits = 3))
+      
+      
+      # -- update progressBar (and close)
+      updateProgress(title = "Evaluation done.", debug = pb_debug)
       
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
@@ -608,41 +630,89 @@ reccurentCheck_Server <- function(id, r) {
     # ProgressBar component
     # --------------------------------------------------------------------------
     
-    observeEvent(trigger_progress(), {
+    # observeEvent(trigger_progress(), {
+    #   
+    #   # -- log
+    #   cat("Trigger_progress =", trigger_progress(), "/", trigger_nb_steps(), "\n")
+    #   cat("Trigger_title =", trigger_title(), "\n")
+    #   
+    #   
+    #   # *** DEBUG ******************************************************* 
+    #   #
+    #   Sys.sleep(1)
+    #   #
+    #   # *** DEBUG ******************************************************* 
+    #   
+    #   
+    #   # -- check progress trigger
+    #   if(trigger_progress() == 0){
+    #     
+    #     # -- set progress bar
+    #     progressSweetAlert(id = "progress", session = session, value = 0, total = trigger_nb_steps(), display_pct = TRUE, striped = TRUE, title = "Initializing TensorFlow...")
+    #     
+    #   } else {
+    #     
+    #     # -- update progress
+    #     updateProgressBar(session, "progress", value = trigger_progress(), total = trigger_nb_steps(), title = trigger_title())
+    #   }
+    #   
+    #   # -- check final step
+    #   if(trigger_progress() == trigger_nb_steps()){
+    #     closeSweetAlert(session)
+    #     trigger_progress(-1)
+    #     trigger_nb_steps(0)
+    #     trigger_title(NULL)
+    #   }
+    #   
+    # }, ignoreInit = TRUE, ignoreNULL = TRUE)
+    
+    
+    # -- Helper function: set progress bar
+    setProgress <- function(value = 0, total = 0, title = ""){
       
       # -- log
-      cat("Trigger_progress =", trigger_progress(), "\n")
-      cat("Trigger_title =", trigger_title(), "\n")
+      cat("[setProgress] =", value, "/", total, "\n")
+
+      # -- store values
+      trigger_progress(value)
+      trigger_nb_steps(total)
       
+      # -- set progress bar
+      progressSweetAlert(id = "progress", session = session, value = value, total = total, display_pct = TRUE, striped = TRUE, title = title)
+      
+    }
+    
+    
+    # -- Helper function: update progress bar
+    updateProgress <- function(title = "", debug = FALSE){
       
       # *** DEBUG ******************************************************* 
-      #
-      #Sys.sleep(1)
-      #
-      # *** DEBUG ******************************************************* 
-      
-      
-      # -- check progress trigger
-      if(trigger_progress() == 0){
+      if(debug){
         
-        # -- set progress bar
-        progressSweetAlert(id = "progress", session = session, value = 0, total = trigger_nb_steps(), display_pct = TRUE, striped = TRUE, title = "Initializing TensorFlow...")
+        cat("[WARNING] updateProgress DEBUG mode ON -- sleep 1s !!! \n")
+        Sys.sleep(1)
         
-      } else {
-        
-        # -- update progress
-        updateProgressBar(session, "progress", value = trigger_progress(), total = trigger_nb_steps(), title = trigger_title())
       }
+      # *** DEBUG ******************************************************* 
+     
+      # -- update trigger
+      trigger_progress(trigger_progress() + 1)
+      
+      # -- log
+      cat("[updateProgress] =", trigger_progress(), "/", trigger_nb_steps(), "\n")
+      
+      # -- update progress
+      updateProgressBar(session, "progress", value = trigger_progress(), total = trigger_nb_steps(), title = title)
       
       # -- check final step
       if(trigger_progress() == trigger_nb_steps()){
+        cat("[updateProgress] Final step reached, close dialog. \n")
         closeSweetAlert(session)
         trigger_progress(-1)
         trigger_nb_steps(0)
-        trigger_title(NULL)
       }
       
-    }, ignoreInit = TRUE)
+    }
     
     # --------------------------------------------------------------------------
     
