@@ -261,40 +261,88 @@ body <- dashboardBody(
         # TAB: Monitoring
         tabItem(tabName = "monitoring",
                 
-                h2("Monitoring"),
+                h2("Evaluation & Monitoring"),
                 
+                # -- 1St row: Select model & data
                 fluidRow(
                     
-                    # input panel
-                    column(width = 4,
+                    column(width = 6, 
                            wellPanel(
+                               h3("Model"),
                                selectModel_INPUT("check"),
-                               thresholdSlider_INPUT("check"))),
+                               summary_UI("check"))),
                     
-                    column(width = 4,
-                        wellPanel(
-                            summary_UI("check"))),
+                    column(width = 6, 
+                           wellPanel(
+                               h3("Test data"),
+                               p("The test dataset is made of Sydney weather observations collected from the Australian BOM since Septembre, 2019.
+                                 It is (for now) manually downloaded and pre-processed using python scripts on monthly basis."),
+                               nbObs_UI("check"),
+                               dateRange_INPUT("check")))),
+                
+                wellPanel(
+                    fluidRow(
+                        h3("Observations"),
+                        itemTable_UI("check"))),
+                
+                
+                # -- 2nd row: ROC Curve & AUC
+                wellPanel(
+                    fluidRow(
+                        column(width = 12, 
+                               
+                               column(width = 6, 
+                                      h3("ROC Curve"),
+                                      rocPlot_UI("check")),
+                               column(width = 6, 
+                                      h3("Area Under Curve"),
+                                      auc_roc_UI("check"),
+                                      p("ROC curves may provide an excessively optimistic view of the performance for highly imbalanced datasets.
+                                        This is true with model M1: the dataset is highly screwed with only ~20% positive examples."))))),
+                
+                
+                
+                # -- 3rd row: Precision/Recall Curve & AUC
+                wellPanel(
+                    fluidRow(
+                        column(width = 12, 
+                               
+                               column(width = 6, 
+                                      h3("Precision/Recall Curve"),
+                                      prPlot_UI("check")),
+                               column(width = 6, 
+                                      h3("Area Under Curve"),
+                                      auc_pr_UI("check"),
+                                      p("Precision and recall make it possible to assess the performance of a classifier on the minority class."))))),
+                
+                
+                wellPanel(
+                    
+                    # -- input
+                    fluidRow(
+                        column(width = 3, 
+                               thresholdSlider_INPUT("check"),
+                               p("Select threshold to turn raw values into binary predictions (No rain / Rain)"))),
                         
-                        column(width = 4,
-                               wellPanel(
-                                   h3("Test data")))),
-                
-                fluidRow(
-                    column(width = 3, nbObs_UI("check")),
-                    column(width = 3, nbPredictionOK_UI("check")),
-                    column(width = 3, nbPredictionKO_UI("check")),
-                    column(width = 3, accuracy_UI("check"))),
-                
-                fluidRow(
-                    column(width = 6, box(width = 12, title = "Confusion Matrix", confusionPlot_UI("check"))),
-                    column(width = 6, precision_UI("check"),
-                           recall_UI("check"),
-                           f1Score_UI("check"))),
-                
-                fluidRow(
-                    column(width = 6, box(width = 12, title = "ROC Curve", rocPlot_UI("check"))),
-                    column(width = 6, auc_UI("check")))
-                
+                    
+                    # -- accuracy
+                    fluidRow(
+                        h3("Predictions & Accuracy"),
+                        column(width = 3, nbPredictionOK_UI("check")),
+                        column(width = 3, nbPredictionKO_UI("check")),
+                        column(width = 6, accuracy_UI("check"))),
+                    
+                    # -- confusion matrix
+                    fluidRow(
+                        column(width = 6, 
+                               h3("Confusion Matrix"), 
+                               confusionPlot_UI("check")),
+                        column(width = 6, 
+                               h3("Precision / Recall"),
+                               precision_UI("check"),
+                               recall_UI("check"),
+                               f1Score_UI("check"))))
+        
                 
                 #itemTable_UI("check")
                 

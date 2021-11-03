@@ -7,6 +7,7 @@
 # -- Declare path
 path <- list(script = "./src/script/R",
              data = "./dataset",
+             formated = "./dataset/formated",
              processed = "./dataset/processed",
              model = "./output/models")
 
@@ -15,7 +16,8 @@ path <- list(script = "./src/script/R",
 # --------------------------------------------------------------------------------
 
 file <- list(raw_dataset = file.path(path$data, "sydney_2008_2017_raw.csv"),
-             model_list = "model_list.csv")
+             model_list = "model_list.csv",
+             formated = "formated_data.csv")
 
 
 # --------------------------------------------------------------------------------

@@ -7,6 +7,7 @@
 # -- Library
 library(data.table)
 library(pROC)
+library(PRROC)
 library(shinyWidgets)
 
 
@@ -15,8 +16,7 @@ library(shinyWidgets)
 # --------------------------------------------------------------------------------
 
 # -- Summary
-summary_UI <- function(id)
-{
+summary_UI <- function(id){
 
   # namespace
   ns <- NS(id)
@@ -30,8 +30,7 @@ summary_UI <- function(id)
 # -- Table section --------------------
 
 # -- DT table UI
-itemTable_UI <- function(id)
-{
+itemTable_UI <- function(id){
   
   # namespace
   ns <- NS(id)
@@ -121,14 +120,25 @@ f1Score_UI <- function(id){
   
 }
 
-# -- Value box AUC
-auc_UI <- function(id){
+# -- Value box AUC ROC
+auc_roc_UI <- function(id){
   
   # namespace
   ns <- NS(id)
   
   # box
-  uiOutput(ns("auc"))
+  uiOutput(ns("auc_roc"))
+  
+}
+
+# -- Value box AUC PR
+auc_pr_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  uiOutput(ns("auc_pr"))
   
 }
 
@@ -142,10 +152,9 @@ confusionPlot_UI <- function(id){
   ns <- NS(id)
   
   # plot
-  plotOutput(ns("confusion_plot"), width = "400px", height = "400px")
+  plotOutput(ns("confusion_plot"), width = "500px", height = "400px")
   
 }
-
 
 # -- ROC curve plot
 rocPlot_UI <- function(id){
@@ -158,14 +167,24 @@ rocPlot_UI <- function(id){
   
 }
 
+# -- PR curve plot
+prPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("pr_plot"), width = "400px", height = "400px")
+  
+}
+
 
 # --------------------------------------------------------------------------------
 # INPUT ITEMS SECTION
 # --------------------------------------------------------------------------------
 
 # -- Select model input
-selectModel_INPUT <- function(id)
-{
+selectModel_INPUT <- function(id){
   
   # namespace
   ns <- NS(id)
@@ -175,10 +194,8 @@ selectModel_INPUT <- function(id)
   
 }
 
-
 # -- Threshold slider input
-thresholdSlider_INPUT <- function(id)
-{
+thresholdSlider_INPUT <- function(id){
   
   # namespace
   ns <- NS(id)
@@ -188,21 +205,21 @@ thresholdSlider_INPUT <- function(id)
   
 }
 
+# -- Date range input
+dateRange_INPUT <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # text
+  uiOutput(ns("date_range"))
+  
+}
+
 
 # --------------------------------------------------------------------------------
 # BUTTON ITEMS SECTION
 # --------------------------------------------------------------------------------
-
-# -- ROC button
-# getROC_btn <- function(id)
-# {
-#   # namespace
-#   ns <- NS(id)
-# 
-#   # button
-#   actionButton(ns("roc_btn"), label = "ROC Curve")
-# 
-# }
 
 
 # --------------------------------------------------------------------------------
@@ -218,9 +235,7 @@ reccurentCheck_Server <- function(id, r) {
     # -- ProgressBar
     trigger_progress <- reactiveVal(-1)
     trigger_nb_steps <- reactiveVal(0)
-    
-    # -- default threshold
-    r$threshold <- reactiveVal(NULL)
+    trigger_title <- reactiveVal(NULL)
     
     # -- selected model (name and model)
     r$selectedModel <- reactiveVal(NULL)
@@ -233,23 +248,45 @@ reccurentCheck_Server <- function(id, r) {
     r$test_ds <- reactiveVal(NULL)
     r$test_labels <- reactiveVal(NULL)
     
+    # -- subset index data (date range)
+    subset_index <- reactiveVal(NULL)
+    
+    # -- formated data (to retireve dates)
+    formated_ds <- reactiveVal(NULL)
+    
     # -- predictions
     r$predictions <- reactiveVal(NULL)
     
     # -- monitoring
     r$monitoring <- reactiveVal(NULL)
     
-    # -- AUC (Area Under the ROC Curve)
-    auc <- reactiveVal(NULL)
+    # -- AUC (Area Under Curves)
+    auc_roc <- reactiveVal(NULL)
+    auc_pr <- reactiveVal(NULL)
     
     # -- plots
     p_confusion <- reactiveVal(NULL)
     p_roc <- reactiveVal(NULL)
+    p_pr <- reactiveVal(NULL)
+    
+    
+    # -- load formated dataset (to get dates)
+    formated_df <- read.csv(file.path(path$formated, file$formated), header = TRUE)
+    formated_df$Date <- as.Date(formated_df$Date, format = "%Y-%m-%d")
+    
+    # -- store
+    formated_ds(formated_df)
+    
+    # -- get min max date range
+    date_min <- min(formated_df$Date)
+    date_max <- max(formated_df$Date)
     
     
     # -------------------------------------
     # Outputs
     # -------------------------------------
+    
+    # -- INPUT section --------------------
     
     # -- select input (model list)
     output$model_select <- renderUI(selectInput(ns("model"), "Select model", choices = r$models()$Name))
@@ -258,17 +295,21 @@ reccurentCheck_Server <- function(id, r) {
     output$thresholdSlider <- renderUI(sliderInput(ns("thresholdSlider"), h3("Threshold"), 
                                                    min = 0, max = 1, value = 0.5))
     
+    # -- select date range input
+    output$date_range <- renderUI(dateRangeInput(ns("date_range"), label = "Select date", start = date_min, end = date_max, min = date_min, max = date_max))
+    
+    # -- UI section --------------------
     
     # -- selected model name
     output$summary <- renderUI(tagList(
-      h3(r$selectedModel()),
+      p("Name:", r$selectedModel()),
       p("Description:"),
       p(r$models()[r$models()$Name == r$selectedModel(), ]$Description),
-      p("Version:"),
-      p(r$models()[r$models()$Name == r$selectedModel(), ]$Version)))
+      p("Version:", r$models()[r$models()$Name == r$selectedModel(), ]$Version)))
+      
     
     # -- Main table
-    output$itemTable <- renderDT(r$test_ds(),
+    output$itemTable <- renderDT(formated_ds(),
                                  options = list(lengthMenu = c(5, 1),
                                                 pageLength = 5,
                                                 dom = "lfrtip", #tp
@@ -315,9 +356,14 @@ reccurentCheck_Server <- function(id, r) {
       valueBox(r$monitoring()$F1.Score, "F1 Score", width = 4, color = "purple")
     )
     
-    # -- AUC value
-    output$auc <- renderValueBox(
-      valueBox(auc(), "AUC", width = 4, color = "purple")
+    # -- AUC ROC value
+    output$auc_roc <- renderValueBox(
+      valueBox(auc_roc(), "AUC", width = 4, color = "purple")
+    )
+    
+    # -- AUC PR value
+    output$auc_pr <- renderValueBox(
+      valueBox(auc_pr(), "AUC", width = 4, color = "purple")
     )
     
     
@@ -329,6 +375,9 @@ reccurentCheck_Server <- function(id, r) {
     # -- ROC curve plot
     output$roc_plot <- renderPlot(p_roc())
     
+    # -- PR curve plot
+    output$pr_plot <- renderPlot(p_pr())
+    
     
     # --------------------------------------------------------------------------
     # Observer values
@@ -339,6 +388,10 @@ reccurentCheck_Server <- function(id, r) {
 
       cat("observeEvent: selectedModel updated \n")
 
+      # -- update progress
+      trigger_title("Loading ML model...")
+      trigger_progress(trigger_progress() + 1)
+      
       # -- prepare
       path <- path$model
       file <- r$models()[r$models()$Name == r$selectedModel(), ]$File
@@ -348,9 +401,6 @@ reccurentCheck_Server <- function(id, r) {
       
       # -- notify
       #showNotification("Model loaded.")
-      
-      # -- update progress
-      trigger_progress(1)
       
       # -- store
       r$model(model)
@@ -363,6 +413,10 @@ reccurentCheck_Server <- function(id, r) {
       
       cat("observeEvent: .h5 model file loaded. \n")
       
+      # -- update progress
+      trigger_title("Loading test data...")
+      trigger_progress(trigger_progress() + 1)
+      
       # -- get preprocessed data file name
       file_name <- r$models()[r$models()$Name == r$selectedModel(), ]$Input
       
@@ -373,13 +427,25 @@ reccurentCheck_Server <- function(id, r) {
       labels_df <- processed_df["RainTomorrow"]
       input_df <- processed_df[, !names(processed_df) %in% c("RainTomorrow")]
       
-      # -- update progress
-      trigger_progress(2)
-      
       # -- store
       r$test_ds(input_df)
       r$test_labels(labels_df)
       
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
+    
+    
+    # -- input$date_range
+    observeEvent(input$date_range, {
+      
+      cat("Date Range min =", as.Date(input$date_range[[1]]), "\n")
+      cat("Date Range max =", as.Date(input$date_range[[2]]), "\n")
+      
+      # -- get indexes matching date range
+      index <- formated_ds()$Date >= input$date_range[[1]] & formated_ds()$Date <= input$date_range[[2]]
+      cat("Selected rows = ", sum(index), "\n")
+      
+      # -- subset and store
+      subset_index(index)
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
@@ -388,6 +454,10 @@ reccurentCheck_Server <- function(id, r) {
     observeEvent(r$test_ds(), {
       
       cat("observeEvent: test dataset updated, computing predictions... \n")
+      
+      # -- update progress
+      trigger_title("Computing predictions...")
+      trigger_progress(trigger_progress() + 1)
       
       # -- get values
       model <- r$model()
@@ -404,11 +474,14 @@ reccurentCheck_Server <- function(id, r) {
         
       # notify
       #showNotification("Compute prediction done.")
-      # -- update progress
-      trigger_progress(3)
       
       # -- store
       r$predictions(raw_predictions)
+      
+      
+      # -- update progress
+      trigger_title("Computing ROC & AUC...")
+      trigger_progress(trigger_progress() + 1)
       
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
@@ -417,22 +490,34 @@ reccurentCheck_Server <- function(id, r) {
     # -- predictions
     observeEvent({
       r$predictions()
-      r$threshold()}, {
+      input$thresholdSlider
+      subset_index()
+      auc_roc()}, {
         
         # ** otherwise it's called when prediction is NULL (idk...)
-        req(r$predictions(), r$threshold())
+        # ** adding auc_roc() as a trigger to for progress order
+        req(r$predictions(), input$thresholdSlider, auc_roc())
         
-        cat("observeEvent: predictions or threshold updated, computing metrics... \n")
+        cat("observeEvent: updating metrics... \n")
+        
+        # -- update progress
+        if(trigger_progress() != -1){
+          trigger_title("Computing metrics...")
+          trigger_progress(trigger_progress() + 1)
+        }
         
         # -- get values
-        test_labels <- r$test_labels()
-        predictions <- r$predictions()
+        test_labels <- r$test_labels()[subset_index(), ]
+        str(test_labels)
+        predictions <- r$predictions()[subset_index(), ]
+        str(predictions)
         
         # -- merge
         df <- cbind(test_labels, predictions)
+        str(df)
         
         # -- call evalution function
-        eval <- evaluateModel(df, r$threshold(), verbose = TRUE)
+        eval <- evaluateModel(df, input$thresholdSlider, verbose = TRUE)
         
         # -- store
         r$monitoring(eval)
@@ -454,14 +539,20 @@ reccurentCheck_Server <- function(id, r) {
       # -- store
       p_confusion(p)
       
+      # -- update progress
+      if(trigger_progress() != -1){
+        trigger_progress(trigger_progress() + 1)
+      }
+      
+      
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
     
-    # -- test_ds
+    # -- predictions
     observeEvent(r$predictions(), {
       
-      # log
-      cat("Computing ROC curve & AUC... \n")
+      # --log
+      cat("Computing evaluation... \n")
       
       # -- get values
       test_labels <- r$test_labels()
@@ -474,22 +565,41 @@ reccurentCheck_Server <- function(id, r) {
       eval_list <- lapply(seq(0, 1, by = 0.025), function(x) evaluateModel(to_eval_df, x))
       eval_df <- rbindlist(eval_list)
       
+      # ---- 1. ROC & AUC
       # -- reorder (to avoid geom_line to plot in wrong direction)
       eval_df <- eval_df[with(eval_df, order(FP.Rate, TP.Rate)), ]
       
       # -- get ROC curve plot
-      p <- getROCPlot(eval_df)
+      p1 <- getROCPlot(eval_df)
       
       # -- get AUC value (explicit call to package to avoid conflict)
       area_under_ROC <- pROC::auc(to_eval_df$RainTomorrow, to_eval_df$Raw.Prediction, levels=c(0, 1), direction = '<')
-      area_under_ROC <- round(area_under_ROC, digits = 3)
       
-      # -- update progress
-      trigger_progress(4)
+      # ROC Curve    
+      # roc <- roc.curve(scores.class0 = fg, scores.class1 = bg, curve = T)
       
       # -- store
-      p_roc(p)
-      auc(area_under_ROC)
+      p_roc(p1)
+      auc_roc(round(area_under_ROC, digits = 3))
+      
+      # --log
+      cat("ROC curve & AUC done. \n")
+      
+      # ---- 2. Precision/Recall & AUC
+      
+      # -- get Precision/Recall curve plot
+      p2 <- getPrecRecallPlot(eval_df)
+      
+      # -- get AUC value
+      fg <- to_eval_df[to_eval_df$RainTomorrow == 1, ]$Raw.Prediction
+      bg <- to_eval_df[to_eval_df$RainTomorrow == 0, ]$Raw.Prediction
+      
+      # -- compute AUC PR
+      pr <- pr.curve(scores.class0 = fg, scores.class1 = bg, curve = F)
+      
+      # -- store
+      p_pr(p2)
+      auc_pr(round(pr$auc.integral, digits = 3))
       
       
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
@@ -507,23 +617,11 @@ reccurentCheck_Server <- function(id, r) {
       
       # Create a Progress object
       trigger_progress(0)
-      trigger_nb_steps(4)
+      trigger_nb_steps(6)
 
       # store value
       r$selectedModel(input$model)
 
-    })
-    
-    
-    # -- SliderInput: thresholdSlider
-    observeEvent(input$thresholdSlider, {
-      
-      # log
-      cat("Threshold = ", input$thresholdSlider, "\n")
-      
-      # store value
-      r$threshold(input$thresholdSlider)
-      
     })
     
     
@@ -541,17 +639,26 @@ reccurentCheck_Server <- function(id, r) {
       
       # -- log
       cat("Trigger_progress =", trigger_progress(), "\n")
+      cat("Trigger_title =", trigger_title(), "\n")
+      
+      
+      # *** DEBUG ******************************************************* 
+      #
+      #Sys.sleep(1)
+      #
+      # *** DEBUG ******************************************************* 
+      
       
       # -- check progress trigger
       if(trigger_progress() == 0){
         
         # -- set progress bar
-        progressSweetAlert(id = "progress", session = session, value = 0, total = trigger_nb_steps(), display_pct = TRUE, striped = TRUE, title = "Evaluating model")
+        progressSweetAlert(id = "progress", session = session, value = 0, total = trigger_nb_steps(), display_pct = TRUE, striped = TRUE, title = "Initializing TensorFlow...")
         
       } else {
         
         # -- update progress
-        updateProgressBar(session, "progress", value = trigger_progress(), total = trigger_nb_steps())
+        updateProgressBar(session, "progress", value = trigger_progress(), total = trigger_nb_steps(), title = trigger_title())
       }
       
       # -- check final step
@@ -559,6 +666,7 @@ reccurentCheck_Server <- function(id, r) {
         closeSweetAlert(session)
         trigger_progress(-1)
         trigger_nb_steps(0)
+        trigger_title(NULL)
       }
       
     }, ignoreInit = TRUE)
