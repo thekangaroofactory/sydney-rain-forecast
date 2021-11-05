@@ -47,7 +47,7 @@ shinyServer(
         
         
         # -- get App version
-        app_version <- getVersion(debug = TRUE)
+        app_version <- getVersion()
         
         # -- ouput version info
         output$version_timestamp <- renderText({paste("Version:", app_version[[1]])})

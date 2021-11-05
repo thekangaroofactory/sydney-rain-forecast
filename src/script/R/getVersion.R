@@ -20,7 +20,7 @@ getVersion <- function(debug = FALSE){
     log_file <- read.csv('.git/logs/HEAD', header = FALSE, sep = "\t")
     
     # get last line
-    log_file <- log_file[dim(log_file)[1]-1, ]
+    log_file <- log_file[dim(log_file)[1], ]
     
     # store comment
     comment <- log_file$V2
@@ -31,7 +31,7 @@ getVersion <- function(debug = FALSE){
     
     # store values
     timestamp <- as.numeric(time_df$timestamp)
-    tz <- bar$tz
+    tz <- time_df$tz
     
     # commpute time to remove to timestamp
     if(tz == "+0200"){
