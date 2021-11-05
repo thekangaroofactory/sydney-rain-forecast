@@ -107,7 +107,8 @@ balancePlot_UI <- function(id)
   ns <- NS(id)
   
   # box
-  plotOutput(ns("balancePlot"))
+  plotOutput(ns("balancePlot"), height = "200px")
+  #uiOutput(ns("balancePlot"))
   
 }
 
@@ -182,10 +183,15 @@ analysisManager_Server <- function(id, r) {
     # -- declare
     output$showCorrTxt <- reactive(FALSE)
     outputOptions(output, "showCorrTxt", suspendWhenHidden = FALSE)
+    
     # -- Numerical feature list
     output$wipNumFeat <- renderText("-")
+    
     # -- Categorical feature list
     output$wipCatFeat <- renderText("-")
+    
+    # -- default values for plots
+    output$tmpPlotText <- renderUI(div(class = 'tmpText', p("Load dataset to display the data explorer.")))
     
     
     # --------------------------------------------------------------------------------
@@ -200,12 +206,11 @@ analysisManager_Server <- function(id, r) {
     observeEvent(r$raw_dataset(), {
       
       output$balancePlot <- renderPlot({
+          
         ggplot(r$raw_dataset(), aes(x = RainTomorrow, fill = RainTomorrow)) + 
           geom_bar(width = 0.25, alpha = 0.5, fill = c("#999999", "#E69F00")) +
-          coord_flip()
+          coord_flip()})
       })
-      
-    })
     
     
     # --------------------------------------------------------------------------------
@@ -244,9 +249,7 @@ analysisManager_Server <- function(id, r) {
       if(!is.null(r$wip_dataset()))
       {
         # generate plot
-        output$wipCorrelation <- renderPlot(correlation(df.numerical(r$wip_dataset())),
-                                            width = 500,
-                                            height = 500)
+        output$wipCorrelation <- renderPlot(correlation(df.numerical(r$wip_dataset())))
         
         # show text
         output$showCorrTxt <- reactive(TRUE)

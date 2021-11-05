@@ -1,0 +1,21 @@
+
+/* -----------------------------------------------------------------------------
+
+   Custom CSS file for Shiny Dashboard
+   
+   Author: Kangaroo.AI
+   https://www.kangaroo-ai.fr
+
+----------------------------------------------------------------------------- */
+
+
+/* temporary text (waiting for plot, box, etc...) */
+
+.tmpText {
+  padding-left: 15px;
+}
+
+.tmpText p{
+  font-style: italic;
+  color: #601091;
+}

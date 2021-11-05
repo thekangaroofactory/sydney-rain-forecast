@@ -24,7 +24,7 @@ header <- dashboardHeader(title = "Sydney Rain Forecast")
 # Sidebar
 sidebar <- dashboardSidebar(
     sidebarMenu(
-        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"), selected = TRUE),
+        menuItem("Project Dashboard", tabName = "dashboard", icon = icon("dashboard"), selected = TRUE),
         menuItem("Introduction", tabName = "introduction", icon = icon("file")),
         menuItem("Exploratory Analysis", tabName = "analyze", icon = icon("file")),
         menuItem("Missing values", tabName = "nan", icon = icon("file")),
@@ -35,35 +35,47 @@ sidebar <- dashboardSidebar(
 # Body
 body <- dashboardBody(
     
+    # -- Include custom CSS file
+    includeCSS("www/kangarooai.css"),
+    
+    # -- To use sweet progressBar
     useSweetAlert("material-ui", ie = TRUE),
     
     tabItems(
         
         # -- TAB: Dashboard ----------------------------------------------------
         tabItem(tabName = "dashboard",
-                h2("Dashboard"),
+                h2("Project Dashboard"),
                 wellPanel(
                     
-                    h3("*** Draft version ***"),
-                    p("This is a draft (development) version of the App. It will be updated when new (and stable) content is added."),
-                    p("The goal of this App is to put into production a rain prediction model based on Machine Learning, evaluate it in real
-                      time with new observations, and demonstrate how AI and Data Science work."),
+                    h3("*** BETA version ***"),
+                    p("This is a development version of the App. It is updated on regular basis when new (and stable..) content is added."),
                     
-                    h3("Current Content"),
+                    h3("Goal"),
+                    p("The goal for this project is to put into production a rain prediction model based on Machine Learning, evaluate it in real
+                      time with new observations, and demonstrate how AI and Data Science work (through playground components)."),
+                    
+                    h3("Project phases"),
+                    tags$ol(
+                        tags$li(span("Setup the pipeline: put in place different components, reusing the original project (used to be a training exercise)", style = "color:blue")),
+                        tags$li("Automatize manual steps: download of new observations, python pre-processing scripts, etc..."),
+                        tags$li("Implement continuous improvement: setup error analysis to improve models.")),
+                    
+                    h3("Actual status"),
                     tags$ul(
-                        tags$li("Introduction"),
-                        tags$li("Load dataset, preprocess"),
+                        tags$li("Introduction ~done"),
                         tags$li(span("Exploratory Analysis ~InWork", style = "color:blue")),
                         tags$li(span("Missing values ~Draft", style = "color:blue")),
                         tags$li(span("Feature engineering ~NotImplemented", style = "color:grey; font-style: italic")),
                         tags$li(span("Train model ~NotImplemented", style = "color:grey; font-style: italic")),
                         tags$li(span("Monitoring ~InWork", style = "color:blue"))),
                     
+                    h3("GitHub"),
+                    tags$a("https://github.com/kangarooaifr/sydney-rain-forecast", href = "https://github.com/kangarooaifr/sydney-rain-forecast"),
+                    
                     h3("How it works"),
                     p("Go down through the sidebar item list, then use the main area tabs from left to right."),
-                    p("All operations, plots are done live with the real data in memory."),
-                    
-                    balancePlot_UI("analyze"))),
+                    p("All operations, plots are done live with the real data in memory."))),
         
         # -- END: Dashboard ----------------------------------------------------
         
@@ -72,13 +84,18 @@ body <- dashboardBody(
         tabItem(tabName = "introduction",
                 h2("Introduction"),
                 wellPanel(
+                    
                     h3("Source"),
-                    p("The original dataset is provided by the Australian Government - ", strong("Bureau of Meteorology (BOM)"), ": ", a("http://www.bom.gov.au/climate/data/", href = "http://www.bom.gov.au/climate/data/")),
-                    p("It contains 140000+ examples, captured between 2008 and 2017 in different locations accross Australia, with daily observations and label whether there was rain or not on the next day."),
+                    p("The original dataset is provided by the Australian Government - ", strong("Bureau of Meteorology (BOM)"), ": ", a("http://www.bom.gov.au/climate/data/", href = "http://www.bom.gov.au/climate/data/"), br(),
+                    "It contains 140000+ examples, captured between 2008 and 2017 in different locations accross Australia, with daily observations and label whether there was rain or not on the next day."),
                     
                     h3("Sydney"),
-                    p("To setup this application, I decided to focus on the city of Sydney.", br(),
-                      "There are 6342 observations for Sydney in the main dataset."),
+                    p("To setup the new components for this application, I decided to focus on the city of Sydney.", br(),
+                      "There are 6342 observations for Sydney in the main dataset.", br(),
+                      "This subset will be used for the Exploratory Analysis & Missing Data sections."),
+                    p("The current models have been trained using the whole dataset: one (M1) with all the data, one (M2) with balanced observations.", br(),
+                      "Predictions and evaluation are performed on new observations for Sydney."),
+                    
                     fluidRow(box(width = 6, map_UI("map"))),
                     
                     h3("Goals"),
@@ -115,39 +132,42 @@ body <- dashboardBody(
                     
                     # -- Data explorer
                     fluidRow(
-                        box(title = "Data explorer", width = 12, status = "primary", height = "500", solidHeader = T, itemTable_UI("model")))),
+                        br(),
+                        ItemTable_UI("model"))),
                 
                 
                 # -- PREPROCESSING
-                fluidRow(
+                wellPanel(
                     
-                    # -- Text & buttons
-                    column(width = 6,
-                           wellPanel(
+                    fluidRow(
+                        
+                        # -- Text & buttons
+                        column(width = 6,
                                
-                               h3("1. Init / reset dataset"),
+                               h3("Init / reset dataset"),
                                p("First, let's duplicate the original (raw) dataset so that we can reset the data at any time if something goes wrong."),
                                p("A Month column is also added to track seasonality during analysis."),
                                resetData_btn("model"),
                                
-                               h3("2. Drop feature"),
+                               h3("Drop feature"),
                                p("The following features need to be removed:"),
                                tags$ul(
                                    tags$li(strong("Location"), ": there are only two values (Sydney / SydneyAirport) which are very close."),
                                    tags$li(strong("RISK_MM"), ": this value is linked to RainTomorrow (forecasts the expected amout of rain).")),
-                               dropFeature_btn("model"))),
-                    
-                    # -- Value boxes
-                    column(width = 6,
-                           p("Dataset size:"),
-                           wipNbFeature_UI("model"),
-                           wipNbRow_UI("model"))),
+                               dropFeature_btn("model")),
+                        
+                        # -- Value boxes
+                        column(width = 6,
+                               wipNbFeature_UI("model"),
+                               wipNbRow_UI("model")))),
                 
                 
                 # -- ANALYZE
-                fluidRow(
-                    column(width = 8,
-                           wellPanel(
+                wellPanel(
+                    
+                    fluidRow(
+                        
+                        column(width = 8,
                                
                                h3("Analyze"),
                                p("The data exploratory analysis helps understanding the different variables in the dataset."),
@@ -157,6 +177,9 @@ body <- dashboardBody(
                                    tags$li("Distribution: range of values, outliers"),
                                    tags$li("Correlation: how do they interact with each other?"),
                                    tags$li("Correlation with target: how do they link with Rain / NoRain.")),
+                               
+                               h3("Imbalanced dataset"),
+                               balancePlot_UI("analyze"),
                                
                                h3("Numerical / Categorical"),
                                p("At this point, we will consider as numerical any variable with.. numbers (integer or float).", br(),
@@ -193,16 +216,20 @@ body <- dashboardBody(
                 
                 
                 # -- CORRELATION
-                fluidRow(
-                    column(width = 8,
-                           wellPanel(
+                wellPanel(
+                    
+                    fluidRow(
+                        
+                        column(width = 6,
                                h3("Numerical features"),
                                getCorrelation_btn("analyze"),
-                               wipCorrTxt_UI("analyze"))),
-                    
-                    column(width = 4,
-                           wipCorrelationPlot_UI("analyze")))),
-
+                               wipCorrTxt_UI("analyze")),
+                        
+                        column(width = 6,
+                               wipCorrelationPlot_UI("analyze"))))),
+        
+        
+        
         # -- END: Analyze ------------------------------------------------------
     
         
@@ -341,9 +368,6 @@ body <- dashboardBody(
                                precision_UI("check"),
                                recall_UI("check"),
                                f1Score_UI("check"))))
-        
-                
-                #itemTable_UI("check")
                 
         )
         

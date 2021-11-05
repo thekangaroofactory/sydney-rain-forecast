@@ -12,14 +12,12 @@
 # --------------------------------------------------------------------------------
 
 # -- DT table UI
-itemTable_UI <- function(id)
-{
+ItemTable_UI <- function(id){
   
   # namespace
   ns <- NS(id)
   
-  # table
-  DTOutput(ns("itemTable"))
+  uiOutput(ns("wrapTable"))
   
 }
 
@@ -136,15 +134,34 @@ datasetManager_Server <- function(id, r, path, file) {
     # -------------------------------------
     
     # -- Main table
-    output$itemTable <- renderDT(r$raw_dataset(),
-                                    options = list(lengthMenu = c(5, 1),
-                                                   pageLength = 5,
-                                                   dom = "lfrtip", #tp
-                                                   ordering = TRUE,
-                                                   searching = TRUE,
-                                                   scrollX = TRUE),
-                                    rownames = FALSE,
-                                    selection = 'single')
+    # output$itemTable <- renderDT(r$raw_dataset(),
+    #                                 options = list(lengthMenu = c(5, 1),
+    #                                                pageLength = 5,
+    #                                                dom = "lfrtip", #tp
+    #                                                ordering = TRUE,
+    #                                                searching = TRUE,
+    #                                                scrollX = TRUE),
+    #                                 rownames = FALSE,
+    #                                 selection = 'single')
+    
+    
+    # -- Main table (wrapper)
+    output$wrapTable <- renderUI({
+      
+      if(!is.null(r$raw_dataset())){
+        
+        box(title = "Data explorer", width = 12, status = "primary", height = "500", solidHeader = T, 
+            renderDT(r$raw_dataset(),
+                     options = list(lengthMenu = c(5, 1),
+                                    pageLength = 5,
+                                    dom = "lfrtip",
+                                    ordering = TRUE,
+                                    searching = TRUE,
+                                    scrollX = TRUE),
+                     rownames = FALSE,
+                     selection = 'single'))
+      } else {
+        div(class = 'tmpText', p("Load dataset to display the data explorer."))}})
     
     
     # -- DIM SECTION -----------------------------------------------------------------------------
