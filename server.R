@@ -46,12 +46,19 @@ shinyServer(
         r <- reactiveValues()
         
         
+        # -- get App version
+        app_version <- getVersion(debug = TRUE)
+        
+        # -- ouput version info
+        output$version_timestamp <- renderText({paste("Version:", app_version[[1]])})
+        output$version_comment <- renderText(app_version[[2]])
+        
+        
         # -- declare modules
         map_Server("map")
         datasetManager_Server("model", r, path, file)
         analysisManager_Server("analyze", r)
         nanManager_Server("nan", r)
-        
         reccurentCheck_Server("check", r)
         
     }

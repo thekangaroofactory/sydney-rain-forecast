@@ -73,6 +73,10 @@ body <- dashboardBody(
                     h3("GitHub"),
                     tags$a("https://github.com/kangarooaifr/sydney-rain-forecast", href = "https://github.com/kangarooaifr/sydney-rain-forecast"),
                     
+                    h3("Last Git commit"),
+                    textOutput("version_timestamp"),
+                    textOutput("version_comment"),
+                    
                     h3("How it works"),
                     p("Go down through the sidebar item list, then use the main area tabs from left to right."),
                     p("All operations, plots are done live with the real data in memory."))),
