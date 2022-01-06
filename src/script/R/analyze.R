@@ -57,6 +57,35 @@ wipCorrTxt_UI <- function(id)
 
 
 # --------------------------------------------------------------------------------
+# VALUEBOX ITEMS SECTION
+# --------------------------------------------------------------------------------
+
+# -- Dataset nb obs rain
+nbRainObs_UI <- function(id)
+{
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  valueBoxOutput(ns("nbRainObs"))
+  
+}
+
+# -- Dataset nb obs no rain
+nbNoRainObs_UI <- function(id)
+{
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  valueBoxOutput(ns("nbNoRainObs"))
+  
+}
+
+
+# --------------------------------------------------------------------------------
 # PLOT ITEMS SECTION
 # --------------------------------------------------------------------------------
 
@@ -198,16 +227,37 @@ analysisManager_Server <- function(id, r) {
     # OUTPUTS
     # --------------------------------------------------------------------------------
     
+    # -- Dataset nb obs rain
+    output$nbRainObs <- renderValueBox({
+      nb_obs <- dim(r$wip_dataset()[r$wip_dataset()$RainTomorrow == 'Yes', ])[[1]]
+      prct <- round(nb_obs / dim(r$wip_dataset())[[1]] * 100, digits = 0)
+      valueBox(ifelse(is.null(r$wip_dataset()), 0, nb_obs), 
+               paste("Rain ", prct, "%"), 
+               icon = icon("list"),
+               color = "purple"
+      )})
+    
+    # -- Dataset nb obs no rain
+    output$nbNoRainObs <- renderValueBox({
+      nb_obs <- dim(r$wip_dataset()[r$wip_dataset()$RainTomorrow == 'No', ])[[1]]
+      prct <- round(nb_obs / dim(r$wip_dataset())[[1]] * 100, digits = 0)
+      valueBox(ifelse(is.null(r$wip_dataset()), 0, nb_obs), 
+               paste("No Rain ", prct, "%"), 
+               icon = icon("list"),
+               color = "purple"
+      )})
+    
+    
     # --------------------------------------------------------------------------------
     # observeEvent: dataset
     # --------------------------------------------------------------------------------
     
     # -- Dataset balance plot
-    observeEvent(r$raw_dataset(), {
-      
+    observeEvent(r$wip_dataset(), {
+
       output$balancePlot <- renderPlot({
-          
-        ggplot(r$raw_dataset(), aes(x = RainTomorrow, fill = RainTomorrow)) + 
+
+        ggplot(r$wip_dataset(), aes(x = RainTomorrow, fill = RainTomorrow)) +
           geom_bar(width = 0.25, alpha = 0.5, fill = c("#999999", "#E69F00")) +
           coord_flip()})
       })
