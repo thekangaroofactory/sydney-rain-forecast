@@ -66,9 +66,12 @@ body <- dashboardBody(
                         tags$li("Introduction ~done"),
                         tags$li(span("Exploratory Analysis ~InWork", style = "color:blue")),
                         tags$li(span("Missing values ~Draft", style = "color:blue")),
+                        br(),
                         tags$li(span("Feature engineering ~NotImplemented", style = "color:grey; font-style: italic")),
                         tags$li(span("Train model ~NotImplemented", style = "color:grey; font-style: italic")),
-                        tags$li(span("Monitoring ~InWork", style = "color:blue"))),
+                        br(),
+                        tags$li(span("Monitoring ~InWork", style = "color:blue")),
+                        tags$li(span("Observation automatic download ~InWork", style = "color:blue"))),
                     
                     h3("GitHub"),
                     tags$a("https://github.com/kangarooaifr/sydney-rain-forecast", href = "https://github.com/kangarooaifr/sydney-rain-forecast"),
@@ -126,13 +129,14 @@ body <- dashboardBody(
                         # -- Load button
                         column(width = 6,
                                h3("Load"),
-                               p("Click on below button to load and display the Sydney dataset"),
+                               p("First, click on below button to load and display the Sydney dataset"),
                                loadData_btn("model")),
                         
                         # -- Value boxes
                         column(width = 6,
                                rawNbFeature_UI("model"),
-                               rawNbRow_UI("model"))),
+                               rawNbRow_UI("model"),
+                               memorySize_UI("model"))),
                     
                     # -- Data explorer
                     fluidRow(
@@ -149,8 +153,8 @@ body <- dashboardBody(
                         column(width = 6,
                                
                                h3("Init / reset dataset"),
-                               p("First, let's duplicate the original (raw) dataset so that we can reset the data at any time if something goes wrong."),
-                               p("A Month column is also added to track seasonality during analysis."),
+                               p("Now, let's duplicate the original (raw) dataset so that we can reset the data at any time if something goes wrong."),
+                               p("A Month column is also added to track seasonality during analysis, so there will be one more feature."),
                                resetData_btn("model"),
                                
                                h3("Drop feature"),
@@ -171,19 +175,34 @@ body <- dashboardBody(
                     
                     fluidRow(
                         
-                        column(width = 8,
+                        column(width = 12,
                                
                                h3("Analyze"),
-                               p("The data exploratory analysis helps understanding the different variables in the dataset."),
+                               p("The data exploratory analysis helps to understand the different variables in the dataset."),
                                p("This includes the following items:"),
                                tags$ul(
                                    tags$li("Type: type and format of the variable (Date, Numeric, Character..)"),
                                    tags$li("Distribution: range of values, outliers"),
                                    tags$li("Correlation: how do they interact with each other?"),
                                    tags$li("Correlation with target: how do they link with Rain / NoRain.")),
-                               
                                h3("Imbalanced dataset"),
-                               balancePlot_UI("analyze"),
+                               p("The dataset is very imbalanced, meaning that one prediction class (rain tomorrow) has much fewer examples as compared to the other class (no rain tomorrow).", br(),
+                                 "This will actually be one of the main challenge since we want to retrieve the days with rain."))),
+                        
+                    fluidRow(
+                        
+                        column(width = 6,
+                               
+                               balancePlot_UI("analyze")),
+                        
+                        column(width = 6,
+                               
+                               nbRainObs_UI("analyze"),
+                               nbNoRainObs_UI("analyze"))),
+                    
+                    fluidRow(
+                        
+                        column(width = 12,
                                
                                h3("Numerical / Categorical"),
                                p("At this point, we will consider as numerical any variable with.. numbers (integer or float).", br(),
@@ -203,7 +222,7 @@ body <- dashboardBody(
                     
                     fluidRow(
                         column(width = 6,
-                               h3("Analysis"),
+                               h3("Numerical Features Analysis"),
                                p("Select a variable to display the analysis."),
                                selectNumerical_input("analyze"),
                                tags$i("The list is empty until the 'Get Types' button from the previous tab is hit.")),

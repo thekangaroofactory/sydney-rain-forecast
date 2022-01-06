@@ -9,6 +9,7 @@ path <- list(script = "./src/script/R",
              data = "./dataset",
              formated = "./dataset/formated",
              processed = "./dataset/processed",
+             download = "./dataset/downloads",
              model = "./output/models")
 
 # --------------------------------------------------------------------------------
