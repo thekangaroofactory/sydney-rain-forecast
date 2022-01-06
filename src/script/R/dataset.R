@@ -48,6 +48,19 @@ rawNbFeature_UI <- function(id)
 }
 
 
+# -- RAW: Dataset memory size
+memorySize_UI <- function(id)
+{
+  
+  # namespace
+  ns <- NS(id)
+  
+  # box
+  valueBoxOutput(ns("memorySize"))
+  
+}
+
+
 # -- WIP: Dataset nb observation
 wipNbRow_UI <- function(id)
 {
@@ -132,19 +145,7 @@ datasetManager_Server <- function(id, r, path, file) {
     # -------------------------------------
     # Outputs
     # -------------------------------------
-    
-    # -- Main table
-    # output$itemTable <- renderDT(r$raw_dataset(),
-    #                                 options = list(lengthMenu = c(5, 1),
-    #                                                pageLength = 5,
-    #                                                dom = "lfrtip", #tp
-    #                                                ordering = TRUE,
-    #                                                searching = TRUE,
-    #                                                scrollX = TRUE),
-    #                                 rownames = FALSE,
-    #                                 selection = 'single')
-    
-    
+  
     # -- Main table (wrapper)
     output$wrapTable <- renderUI({
       
@@ -179,6 +180,15 @@ datasetManager_Server <- function(id, r, path, file) {
     output$nbFeature <- renderValueBox({
       valueBox(ifelse(is.null(r$raw_dataset()), 0, dim(r$raw_dataset())[[2]]),
                "Features", 
+               icon = icon("list"),
+               color = "purple"
+      )})
+    
+    # -- Dataset size
+    output$memorySize <- renderValueBox({
+      size <- round(object.size(r$raw_dataset()) / 1000000, digits = 2)
+      valueBox(ifelse(is.null(r$raw_dataset()), 0, paste(size, "MB")),
+               "Size", 
                icon = icon("list"),
                color = "purple"
       )})
@@ -272,7 +282,7 @@ datasetManager_Server <- function(id, r, path, file) {
         showNotification("Init data first!", type = "error")
       }
       else{
-        if(dim(df)[[2]]>22)
+        if(dim(df)[[2]]>23)
         {
           
           # drop
