@@ -188,6 +188,94 @@ prPlot_UI <- function(id){
   
 }
 
+# -- Prediction density plot
+predictionDensityPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("prediction_density_plot"), width = "400px", height = "400px")
+  
+}
+
+# -- Accuracy density plot
+accuracyDensityPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("accuracy_density_plot"), width = "400px", height = "400px")
+  
+}
+
+# -- TP density plot
+TPDensityPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("TP_density_plot"), width = "400px", height = "400px")
+  
+}
+
+# -- FP density plot
+FPDensityPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("FP_density_plot"), width = "400px", height = "400px")
+  
+}
+
+# -- TN density plot
+TNDensityPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("TN_density_plot"), width = "400px", height = "400px")
+  
+}
+
+# -- FN density plot
+FNDensityPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("FN_density_plot"), width = "400px", height = "400px")
+  
+}
+
+# -- Rain prediction density plot
+RainPredictionDensityPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("rain_prediction_density_plot"), width = "400px", height = "400px")
+  
+}
+
+# -- No rain prediction density plot
+NoRainPredictionDensityPlot_UI <- function(id){
+  
+  # namespace
+  ns <- NS(id)
+  
+  # plot
+  plotOutput(ns("norain_prediction_density_plot"), width = "400px", height = "400px")
+  
+}
+
 
 # ------------------------------------------------------------------------------
 # INPUT ITEMS SECTION
@@ -274,6 +362,7 @@ reccurentCheck_Server <- function(id, r) {
     
     # -- monitoring
     monitoring <- reactiveVal(NULL)
+    monitoring_plots <- reactiveVal(NULL)
     
     # -- AUC values (Area Under Curves)
     auc_roc <- reactiveVal(NULL)
@@ -412,6 +501,16 @@ reccurentCheck_Server <- function(id, r) {
     # -- PR curve plot
     output$pr_plot <- renderPlot(p_pr())
     
+    # -- Plots accross prediction range
+    output$prediction_density_plot <- renderPlot(monitoring_plots()[1])
+    output$accuracy_density_plot <- renderPlot(monitoring_plots()[2])
+    output$TP_density_plot <- renderPlot(monitoring_plots()[3])
+    output$FP_density_plot <- renderPlot(monitoring_plots()[4])
+    output$TN_density_plot <- renderPlot(monitoring_plots()[5])
+    output$FN_density_plot <- renderPlot(monitoring_plots()[6])
+    output$rain_prediction_density_plot <- renderPlot(monitoring_plots()[7])
+    output$norain_prediction_density_plot <- renderPlot(monitoring_plots()[8])
+    
     
     # --------------------------------------------------------------------------
     # OBSERVERS SECTION
@@ -524,6 +623,14 @@ reccurentCheck_Server <- function(id, r) {
       test_labels <- test_labels()
       predictions <- predictions()
       
+      
+      # *********************************************
+      # BS for yearly check -- to be removvvvveeeeeeeeedddddddddddddd !!!
+      
+      # debug__predictions <<- predictions
+      
+      # *********************************************
+      
       # -- merge
       to_eval_df <- cbind(test_labels, predictions)
       
@@ -604,6 +711,21 @@ reccurentCheck_Server <- function(id, r) {
         # -- subset give subset_index_list
         df_to_eval <- df_to_eval[subset_index_list(), ]
         
+        # **********************************************************************
+        # -- DEBUG
+        
+        DEBUG_df_to_eval <<- df_to_eval
+        
+        # **********************************************************************
+        
+        
+        # -- call distribution plot function
+        cat("  - Build predictions distribution plots \n")
+        dist_plots <- getDistributionPlots(stats_df = df_to_eval, threshold = input$thresholdSlider, break_by = 0.05)
+        
+        # -- store
+        monitoring_plots(dist_plots)
+        
         # -- call evaluation function
         cat("  - Evaluate selected predictions \n")
         eval <- evaluateModel(df_to_eval, input$thresholdSlider, verbose = TRUE)
@@ -629,43 +751,6 @@ reccurentCheck_Server <- function(id, r) {
     # --------------------------------------------------------------------------
     # ProgressBar component
     # --------------------------------------------------------------------------
-    
-    # observeEvent(trigger_progress(), {
-    #   
-    #   # -- log
-    #   cat("Trigger_progress =", trigger_progress(), "/", trigger_nb_steps(), "\n")
-    #   cat("Trigger_title =", trigger_title(), "\n")
-    #   
-    #   
-    #   # *** DEBUG ******************************************************* 
-    #   #
-    #   Sys.sleep(1)
-    #   #
-    #   # *** DEBUG ******************************************************* 
-    #   
-    #   
-    #   # -- check progress trigger
-    #   if(trigger_progress() == 0){
-    #     
-    #     # -- set progress bar
-    #     progressSweetAlert(id = "progress", session = session, value = 0, total = trigger_nb_steps(), display_pct = TRUE, striped = TRUE, title = "Initializing TensorFlow...")
-    #     
-    #   } else {
-    #     
-    #     # -- update progress
-    #     updateProgressBar(session, "progress", value = trigger_progress(), total = trigger_nb_steps(), title = trigger_title())
-    #   }
-    #   
-    #   # -- check final step
-    #   if(trigger_progress() == trigger_nb_steps()){
-    #     closeSweetAlert(session)
-    #     trigger_progress(-1)
-    #     trigger_nb_steps(0)
-    #     trigger_title(NULL)
-    #   }
-    #   
-    # }, ignoreInit = TRUE, ignoreNULL = TRUE)
-    
     
     # -- Helper function: set progress bar
     setProgress <- function(value = 0, total = 0, title = ""){

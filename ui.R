@@ -352,6 +352,7 @@ body <- dashboardBody(
                                       p("Precision and recall make it possible to assess the performance of a classifier on the minority class."))))),
                 
                 
+                # -- 4th row: playground and monitoring
                 wellPanel(
                     
                     # -- introduction
@@ -390,7 +391,30 @@ body <- dashboardBody(
                                h3("Precision / Recall"),
                                precision_UI("check"),
                                recall_UI("check"),
-                               f1Score_UI("check"))))
+                               f1Score_UI("check"))),
+                    
+                    # -- prediction density
+                    # fluidRow(
+                    #     column(width = 6, 
+                    #            predictionDensityPlot_UI("check")),
+                    #     column(width = 6, 
+                    #            accuracyDensityPlot_UI("check"))),
+                    # fluidRow(
+                    #     column(width = 6, 
+                    #            TPDensityPlot_UI("check")),
+                    #     column(width = 6, 
+                    #            FPDensityPlot_UI("check"))),
+                    # fluidRow(
+                    #     column(width = 6, 
+                    #            TNDensityPlot_UI("check")),
+                    #     column(width = 6, 
+                    #            FNDensityPlot_UI("check"))),
+                    # fluidRow(
+                    #     column(width = 6, 
+                    #            RainPredictionDensityPlot_UI("check")),
+                    #     column(width = 6, 
+                    #            NoRainPredictionDensityPlot_UI("check")))
+                    )
                 
         )
         
