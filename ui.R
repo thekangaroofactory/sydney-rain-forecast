@@ -46,43 +46,60 @@ body <- dashboardBody(
         # -- TAB: Dashboard ----------------------------------------------------
         tabItem(tabName = "dashboard",
                 h2("Project Dashboard"),
-                wellPanel(
-                    
-                    h3("*** BETA version ***"),
-                    p("This is a development version of the App. It is updated on regular basis when new (and stable..) content is added."),
-                    
-                    h3("Goal"),
-                    p("The goal for this project is to put into production a rain prediction model based on Machine Learning, evaluate it in real
-                      time with new observations, and demonstrate how AI and Data Science work (through playground components)."),
-                    
-                    h3("Project phases"),
-                    tags$ol(
-                        tags$li(span("Setup the pipeline: put in place different components, reusing the original project (used to be a training exercise)", style = "color:blue")),
-                        tags$li("Automatize manual steps: download of new observations, python pre-processing scripts, etc..."),
-                        tags$li("Implement continuous improvement: setup error analysis to improve models.")),
-                    
-                    h3("Actual status"),
-                    tags$ul(
-                        tags$li("Introduction ~done"),
-                        tags$li(span("Exploratory Analysis ~InWork", style = "color:blue")),
-                        tags$li(span("Missing values ~Draft", style = "color:blue")),
-                        br(),
-                        tags$li(span("Feature engineering ~NotImplemented", style = "color:grey; font-style: italic")),
-                        tags$li(span("Train model ~NotImplemented", style = "color:grey; font-style: italic")),
-                        br(),
-                        tags$li(span("Monitoring ~InWork", style = "color:blue")),
-                        tags$li(span("Observation automatic download ~InWork", style = "color:blue"))),
-                    
-                    h3("GitHub"),
-                    tags$a("https://github.com/kangarooaifr/sydney-rain-forecast", href = "https://github.com/kangarooaifr/sydney-rain-forecast"),
-                    
-                    h3("Last Git commit"),
-                    textOutput("version_timestamp"),
-                    textOutput("version_comment"),
-                    
-                    h3("How it works"),
-                    p("Go down through the sidebar item list, then use the main area tabs from left to right."),
-                    p("All operations, plots are done live with the real data in memory."))),
+                
+                fluidRow(
+                  column(width = 8,
+                         
+                         wellPanel(
+                           h3("*** BETA version ***"),
+                           p("This is a development version of the App. It is updated on regular basis when new content is added."),
+                           p("All operations, predictions and plots are built live with the real data in memory."),
+                           
+                           h3("Goal"),
+                           p("The goal for this project is to put into production a rain prediction model based on Machine Learning, evaluate it in real
+                      time with new observations, and allow user to get understanding of data science through playground components."))),
+                  
+                  column(width = 4, 
+                         
+                         h3("GitHub"),
+                         tags$a("https://github.com/kangarooaifr/sydney-rain-forecast", href = "https://github.com/kangarooaifr/sydney-rain-forecast"),
+                         
+                         h3("Last Git commit"),
+                         textOutput("version_timestamp"),
+                         textOutput("version_comment"))),
+                
+                
+                fluidRow(
+                  column(width = 12, 
+                         
+                         wellPanel(
+                           h3("Project phases"),
+                           tags$ol(
+                             tags$li("Setup the pipeline:",
+                                     tags$ul(
+                                       tags$li("put in place different components"),
+                                       tags$li("reuse the original project (used to be a training exercise"))),
+                             tags$li("Automatize manual steps:",
+                                     tags$ul(
+                                       tags$li("Download new observations"),
+                                       tags$li("Setup R/Python interface to reuse Python code"),
+                                       tags$li("Pre-process new observations with Python"),
+                                       tags$li("Make predictions using TensorFlow model"),
+                                       tags$li("Evaluation model & predictions"),
+                                       tags$li("Monitor model & incoming data"),
+                                     )),
+                             
+                             tags$li("Allow user to perform live data science operation:",
+                                     tags$ul(
+                                       tags$li("Data exploration & analysis"),
+                                       tags$li("Data cleaning & missing value"),
+                                     )),
+                             tags$li("Implement continuous improvement:",
+                                     tags$ul(
+                                       tags$li("setup error analysis to improve models."))))))
+                  
+                  
+                    )),
         
         # -- END: Dashboard ----------------------------------------------------
         
