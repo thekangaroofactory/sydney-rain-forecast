@@ -96,10 +96,7 @@ body <- dashboardBody(
                                      )),
                              tags$li("Implement continuous improvement:",
                                      tags$ul(
-                                       tags$li("setup error analysis to improve models."))))))
-                  
-                  
-                    )),
+                                       tags$li("setup error analysis to improve models.")))))))),
         
         # -- END: Dashboard ----------------------------------------------------
         
