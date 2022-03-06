@@ -45,5 +45,6 @@ vignettes/*.pdf
 # -- shinyapps publish folder
 rsconnect/
 screenshots/
+output/
 
 # ------------------------------------------------------------------------------
