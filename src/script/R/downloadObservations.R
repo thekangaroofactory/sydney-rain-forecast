@@ -2,29 +2,53 @@
 library (RCurl)
 
 
-# -- param
-year <- "2021"
-month <- "12"
-station <- "IDCJDW2124"
+#' Download Observations
+#'
+#' @param year year of the observations to be downloaded. If NULL, current year will be used.
+#' @param month month of the observations to be downloaded. If NULL, current month will be used. Should be double digit to match file name.
+#' @param station station of the observations to be downloaded. Default is "IDCJDW2124" (Sydney)
+#' @param path where to save the downloaded file.
+#'
+#' @examples downloadObservations(year = "2022", month = "01", station = "IDCJDW2124", path = "target/path")
 
 
-# -- prepare target url
-target_url <- "http://www.bom.gov.au/climate/dwo/"
-target_url <- paste(target_url, year, month, "/text/", sep = "")
-target_url <- paste(target_url, station, ".", year, month, ".csv", sep = "")
+downloadObservations <- function(year = NULL, month = NULL, station = "IDCJDW2124", path){
+  
+  # check arguments
+  if(is.null(year)){
+    
+    cat("[INFO] Setting current year as default value \n")
+    year = format(Sys.Date(), "%Y")
+    
+  }
+  
+  if(is.null(month)){
+    
+    cat("[INFO] Setting current month as default value \n")
+    month = format(Sys.Date(), "%m")
+    
+  }
+  
+  
+  # -- prepare target url
+  target_url <- "http://www.bom.gov.au/climate/dwo/"
+  target_url <- paste(target_url, year, month, "/text/", sep = "")
+  target_url <- paste(target_url, station, ".", year, month, ".csv", sep = "")
+  cat("Ready to download from", target_url, "\n")
+  
+  # -- download target url
+  download <- getURL(target_url)
+  
+  # -- drop extra line breaks and save to file
+  download <- gsub('[\r]','', download)
+  
+  # -- prepare file name
+  target_file <- paste(station, paste(year,month, sep = ""), "csv", sep = ".")
+  target_file <- file.path(path, target_file)
+  
+  # -- write file
+  write(download, target_file)
+  cat("File downloaded to ", target_file, "\n")
+  
+}
 
-print(target_url)
-
-# -- download target url
-download <- getURL(target_url)
-
-# -- drop extra line breaks and save to file
-download <- gsub('[\r]','', download)
-
-
-# -- prepare file name
-target_file <- paste(station, paste(year,month, sep = ""), "csv", sep = ".")
-target_file <- file.path(path$download, target_file)
-
-# -- write file
-write(download, target_file)
