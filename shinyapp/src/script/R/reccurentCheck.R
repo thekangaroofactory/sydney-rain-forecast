@@ -8,7 +8,7 @@
 library(data.table)
 library(PRROC)
 library(shinyWidgets)
-
+library(keras)
 
 # ------------------------------------------------------------------------------
 # UI ITEMS SECTION

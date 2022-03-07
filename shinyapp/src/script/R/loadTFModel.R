@@ -1,9 +1,5 @@
 
 
-# -- library
-library(keras)
-
-
 # -- load model
 loadTFmodel <- function(path, file){
   

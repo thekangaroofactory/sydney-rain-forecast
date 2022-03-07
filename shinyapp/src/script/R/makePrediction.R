@@ -1,7 +1,5 @@
 
 
-# -- library
-library(keras)
 
 makePrediction <- function(model, input_df, batch_size = NULL, verbose = 1, steps = NULL, callbacks = NULL){
   

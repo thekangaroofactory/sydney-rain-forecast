@@ -8,6 +8,7 @@
 library(shiny)
 library(shinydashboard)
 library(DT)
+library(kpython)
 
 # -- Modules
 source(file.path("./src/script/R", "map.R"))
@@ -28,7 +29,8 @@ sidebar <- dashboardSidebar(
         menuItem("Introduction", tabName = "introduction", icon = icon("file")),
         menuItem("Exploratory Analysis", tabName = "analyze", icon = icon("file")),
         menuItem("Missing values", tabName = "nan", icon = icon("file")),
-        menuItem("Monitoring", tabName = "monitoring", icon = icon("file"))
+        menuItem("Monitoring", tabName = "monitoring", icon = icon("file")),
+        menuItem("Python", tabName = "python", icon = icon("file"))
     )
 )
 
@@ -430,9 +432,39 @@ body <- dashboardBody(
                     #            NoRainPredictionDensityPlot_UI("check")))
                     )
                 
-        )
+        ),
         
         # -- END: Monitoring ---------------------------------------------------
+        
+        
+        # -- TAB: Python connector ---------------------------------------------
+        tabItem(tabName = "python",
+                
+                h2("Python Connector"),
+                
+                wellPanel(textInput("my_input", "Directory"),
+                          h4("Directories:"),
+                          htmlOutput("list_dir"),
+                          h4("Files:"),
+                          htmlOutput("list_file")),
+                
+                textOutput("which_python"),
+                htmlOutput("python_version"),
+                
+                
+                fluidRow(
+                  
+                  column(width = 8,
+                         wellPanel(sysinfo_UI("python"))),
+                  
+                  column(width = 4,
+                         fluidRow(column(width = 12, which_python_UI("python"))),
+                         
+                         fluidRow(column(width = 12, python_version_UI("python"))))))
+                
+                
+        
+        # -- END: Python connector ---------------------------------------------
         
         
     ) # -- tabItems
