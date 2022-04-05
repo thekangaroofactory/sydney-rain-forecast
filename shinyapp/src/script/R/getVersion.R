@@ -48,7 +48,9 @@ getVersion <- function(debug = FALSE){
                                 "comment" = comment)
     
     # save
-    write.csv(version_df, file = 'src/resources/version.csv', row.names = FALSE)
+    target_url = file.path("shinyapp", path$resource, "version.csv")
+    cat("Writing git version to :", target_url, "\n")
+    write.csv(version_df, file = target_url, row.names = FALSE)
     
     
   } else {
@@ -56,7 +58,8 @@ getVersion <- function(debug = FALSE){
     cat("Reading version from App log \n")
     
     # read app version file
-    log_file <- read.csv('src/resources/version.csv', header = TRUE)
+    target_url = file.path(path$resource, "version.csv")
+    log_file <- read.csv(target_url, header = TRUE)
     
     # get values
     last_commit <- log_file$last_commit

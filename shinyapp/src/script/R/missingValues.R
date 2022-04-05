@@ -124,13 +124,22 @@ nanManager_Server <- function(id, r) {
     # -- Button: drop rows
     observeEvent(input$dropRows, {
       
-      cat("Drop rows \n")
-      
-      # drop
-      r$wip_dataset(na.dropRows(r$wip_dataset(), nb.na = 5))
-      
-      # notify
-      showNotification("Drop rows done.")
+      if(is.null(r$wip_dataset())){
+        
+        # notify
+        showNotification("Init data should be performed first.", type = "warning")
+        
+      } else {
+        
+        cat("Drop rows \n")
+        
+        # drop
+        r$wip_dataset(na.dropRows(r$wip_dataset(), nb.na = 5))
+        
+        # notify
+        showNotification("Drop rows done.")
+        
+      }
       
     })
     
@@ -138,18 +147,27 @@ nanManager_Server <- function(id, r) {
     # -- Button: get NA priorities
     observeEvent(input$getNaPriorities, {
       
-      cat("Get NA priorities \n")
-      
-      # compute
-      df <- na.byFeature(r$wip_dataset())
-      df <- df[df$ratio > 1, ]
-      df <- df[order(-df$na), ]
-      
-      # update
-      output$naByFeature <- renderTable(df, rownames = TRUE)
-      
-      # notify
-      showNotification("Get priorities done.")
+      if(is.null(r$wip_dataset())){
+        
+        # notify
+        showNotification("Init data should be performed first.", type = "warning")
+        
+      } else {
+        
+        cat("Get NA priorities \n")
+        
+        # compute
+        df <- na.byFeature(r$wip_dataset())
+        df <- df[df$ratio > 1, ]
+        df <- df[order(-df$na), ]
+        
+        # update
+        output$naByFeature <- renderTable(df, rownames = TRUE)
+        
+        # notify
+        showNotification("Get priorities done.")
+        
+      }
       
     })
     

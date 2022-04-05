@@ -59,7 +59,7 @@ shinyServer(
     
     
     # -- call back-end modules
-    pythonConnector_Server("python", script_path = path$python_script, skip_init = TRUE)
+    #pythonConnector_Server("python", script_path = path$python_script, skip_init = TRUE)
     
     
     # -- call application modules
@@ -71,9 +71,9 @@ shinyServer(
     
     
     # -- check python
-    res <- k_poc_add(5,2)
-    cat("Python call = ", res, "\n")
-    showNotification(paste("Python call = ", res))
+    #res <- k_poc_add(5,2)
+    #cat("Python call = ", res, "\n")
+    #showNotification(paste("Python call = ", res))
         
 
   }
