@@ -29,7 +29,7 @@ sidebar <- dashboardSidebar(
         menuItem("Introduction", tabName = "introduction", icon = icon("file")),
         menuItem("Exploratory Analysis", tabName = "analyze", icon = icon("file")),
         menuItem("Missing values", tabName = "nan", icon = icon("file")),
-        menuItem("Monitoring", tabName = "monitoring", icon = icon("file"))
+        menuItem("Evaluation & Monitoring", tabName = "monitoring", icon = icon("file"))
     )
 )
 
@@ -52,29 +52,37 @@ body <- dashboardBody(
                   column(width = 8,
                          
                          wellPanel(
-                           h3("*** BETA version ***"),
-                           p("This is a development version of the App. It is updated on regular basis when new content is added."),
-                           p("All operations, predictions and plots are built live with the real data in memory."),
                            
-                           h3("Goal"),
-                           p("The goal for this project is to put into production a rain prediction model based on Machine Learning, evaluate it in real
-                      time with new observations, and allow user to get understanding of data science through playground components."))),
+                           h3("Objectives"),
+                           p("The projects is built around key objectives:"),
+                           tags$ul(
+                             tags$li("Train Machine Learning models using data from real life observations,"),
+                             tags$li("Build a web application to deliver the models into a cloud production environment,"),
+                             tags$li("Implement model and data live monitoring,"),
+                             tags$li("Setup MLOps pipelines,"),
+                             tags$li("Allow user to get an understanding of data science through playground components and a real life example.")))),
                   
                   column(width = 4, 
                          
-                         h3("GitHub"),
-                         tags$a("https://github.com/kangarooaifr/sydney-rain-forecast", href = "https://github.com/kangarooaifr/sydney-rain-forecast"),
+                         h3("Version 1.2.4"),
+                         p("This is a stable version of the App."),
+                         tags$ul(
+                           tags$li("In session Exploratory Analysis"),
+                           tags$li("Missing Values (basic view)"),
+                           tags$li("2 models delivered"),
+                           tags$li("Live prediction & evaluation")),
                          
-                         h3("Last Git commit"),
-                         textOutput("version_timestamp"),
-                         textOutput("version_comment"))),
+                         h3("Observations"),
+                         p("Sep 2019 - March 2022")
+                         
+                         )),
                 
                 
                 fluidRow(
                   column(width = 8, 
                          
                          wellPanel(
-                           h3("Project phases"),
+                           h3("Roadmap"),
                            tags$ol(
                              tags$li("Setup the pipeline:",
                                      tags$ul(
@@ -100,11 +108,19 @@ body <- dashboardBody(
                                        tags$li("setup error analysis to improve models.")))))),
                   
                   column(width = 4, 
+                         
+                         h3("GitHub"),
+                         tags$a("https://github.com/kangarooaifr/sydney-rain-forecast", href = "https://github.com/kangarooaifr/sydney-rain-forecast"),
+                         
+                         h3("Last Git commit"),
+                         textOutput("version_timestamp"),
+                         textOutput("version_comment"),
 
                          h3("Python"),
-                         p("The interface to Python is provided by the Reticulate package."),
-                         python_version_UI("python"),
-                         which_python_UI("python")))),
+                         p("The TensorFlow/Keras interface to Python is setup through the Reticulate package."),
+                         #python_version_UI("python"),
+                         #which_python_UI("python")
+                         ))),
         
         # -- END: Dashboard ----------------------------------------------------
         
@@ -128,12 +144,9 @@ body <- dashboardBody(
                     fluidRow(box(width = 6, map_UI("map"))),
                     
                     h3("Goals"),
-                    p("There are different goals for this App:"),
                     tags$ul(
                         tags$li("Build models to predict whether it will rain on the next day,"),
-                        tags$li("Focus on the ability to detect days with rain (Recall),"),
-                        tags$li("Perform continuous monitoring with new observations,"),
-                        tags$li("Be a playground for MLOps training purpose.")))),
+                        tags$li("Focus on the ability to detect days with rain (Recall),")))),
         
         # -- END: Introduction -------------------------------------------------
         
