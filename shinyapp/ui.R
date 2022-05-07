@@ -73,7 +73,7 @@ body <- dashboardBody(
                            tags$li("Live prediction & evaluation")),
                          
                          h3("Observations"),
-                         p("Sep 2019 - March 2022")
+                         p("Sep 2019 - April 2022")
                          
                          )),
                 
