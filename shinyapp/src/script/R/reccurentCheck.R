@@ -377,6 +377,10 @@ reccurentCheck_Server <- function(id, r) {
     date_min <- NULL
     date_max <- NULL
     
+    # -- default threshold values
+    default_threshold <- list("Model_m1" = 0.28,
+                              "Model_m2" = 0.60)
+    
     
     # --------------------------------------------------------------------------
     # Code to be run once
@@ -409,7 +413,7 @@ reccurentCheck_Server <- function(id, r) {
     
     # -- select threshold input (slider)
     output$thresholdSlider <- renderUI(sliderInput(ns("thresholdSlider"), label = h3("Threshold"), 
-                                                   min = 0, max = 1, value = 0.5))
+                                                   min = 0, max = 1, value = default_threshold[[input$selected_model]]))
     
     # -- select date range input
     output$date_range <- renderUI(dateRangeInput(ns("date_range"), label = h3("Date range"), 
