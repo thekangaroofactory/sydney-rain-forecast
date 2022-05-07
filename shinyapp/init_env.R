@@ -1,18 +1,27 @@
 
 
+# -- Detect local run
+is_local <- Sys.getenv('SHINY_PORT') == ""
+is_local <- FALSE
+
+
 # --------------------------------------------------------------------------------
 # PATH
 # --------------------------------------------------------------------------------
 
+# -- project path
+home <- if(is_local) "./shinyapp" else "./"
+
 # -- Declare path
-path <- list(script = "./src/script/R",
-             python_script = "./src/script/Python",
-             resource = "./src/resources",
-             data = "./dataset",
-             formated = "./dataset/formated",
-             processed = "./dataset/processed",
-             download = "./dataset/downloads",
-             model = "./output/models")
+path <- list(script = file.path(home, "src/script/R"),
+             python_script = file.path(home, "src/script/Python"),
+             resource = file.path(home, "src/resources"),
+             data = file.path(home, "dataset"),
+             formated = file.path(home, "dataset/formated"),
+             processed = file.path(home, "dataset/processed"),
+             download = file.path(home, "dataset/downloads"),
+             model = file.path(home, "output/models"))
+
 
 # --------------------------------------------------------------------------------
 # FILES

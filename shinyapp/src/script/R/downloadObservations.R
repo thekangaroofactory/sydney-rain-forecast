@@ -38,6 +38,7 @@ downloadObservations <- function(year = NULL, month = NULL, station = "IDCJDW212
   
   # -- download target url
   download <- getURL(target_url)
+  cat("Download done, size =", object.size(download) ,"\n")
   
   # -- drop extra line breaks and save to file
   download <- gsub('[\r]','', download)
@@ -46,9 +47,13 @@ downloadObservations <- function(year = NULL, month = NULL, station = "IDCJDW212
   target_file <- paste(station, paste(year,month, sep = ""), "csv", sep = ".")
   target_file <- file.path(path, target_file)
   
+  # -- check folder
+  if(!dir.exists(path))
+    cat("[WARNING!] Target directory", path , "does not exist! \n")
+  
   # -- write file
+  cat("Writing file to ", target_file, "\n")
   write(download, target_file)
-  cat("File downloaded to ", target_file, "\n")
   
 }
 
