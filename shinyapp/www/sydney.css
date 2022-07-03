@@ -1,0 +1,178 @@
+
+/* -----------------------------------------------------------------------------
+
+   Custom CSS theme for Shiny Dashboard
+
+   Author: Kangaroo.AI
+   https://www.kangaroo-ai.fr
+
+----------------------------------------------------------------------------- */
+
+
+/* -----------------------------------------------------------------------------
+   Color Section
+----------------------------------------------------------------------------- */
+
+
+:root {
+
+  /* grey */
+  --grey-dark: #2d3037;
+  --grey-mid-high: #393e44;
+  --grey-mid-low: #494c51;
+  --grey-light: #75787d;
+
+
+  /* color */
+  --color-light: #f0c197;
+  --color-dark: #ce905d;
+
+}
+
+
+/* -----------------------------------------------------------------------------
+   Layout Section
+----------------------------------------------------------------------------- */
+
+/* Main Title */
+.main-header .logo {
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.content-wrapper {
+
+  background-color: var(--grey-light);
+
+}
+
+
+/* -----------------------------------------------------------------------------
+   Standard Item Section
+----------------------------------------------------------------------------- */
+
+.well {
+
+}
+
+
+/* -----------------------------------------------------------------------------
+   Widgets
+----------------------------------------------------------------------------- */
+
+.widget-background {
+
+  background-color: var(--grey-dark);
+
+  border-radius: 20px;
+
+  /* Margin & Padding */
+  margin: 5px;
+  padding: 10px;
+
+}
+
+.widget-background h2{
+
+  text-align: center;
+  color: white;
+
+}
+
+
+.widget-card-dark {
+
+  background-color: var(--grey-mid-high);
+  border-radius: 20px;
+
+  /* Margin & Padding */
+  margin: 5px;
+  padding: 10px;
+
+}
+
+
+.widget-card-light {
+
+  background-image: linear-gradient(to right, var(--color-dark), var(--color-light));
+  border-radius: 20px;
+
+  /* Margin & Padding */
+  margin: 5px;
+  padding: 10px;
+
+}
+
+
+.widget-text-dark {
+
+  color: black;
+  font-weight: bold;
+
+}
+
+
+.widget-text-light {
+
+  color: white;
+  font-weight: bold;
+
+}
+
+
+/* -----------------------------------------------------------------------------
+   vertical graduation
+----------------------------------------------------------------------------- */
+
+.feature-container {
+
+  margin: 30px 0;
+
+}
+
+.feature-v-dark {
+
+  position: relative;
+  margin: 0 auto;
+
+  background-color: var(--grey-mid-high);
+  border-radius: 20px;
+
+}
+
+.feature-v-color {
+
+  position: absolute;
+  bottom: 0px;
+
+  background-image: linear-gradient(to top, var(--color-dark), var(--color-light));
+  border-radius: 20px;
+
+}
+
+.tick {
+
+  position: absolute;
+  bottom: 0px;
+
+  border-top: 1px solid white;
+
+  color: white;
+}
+
+.tick-text {
+
+  position: absolute;
+  top: -12px;
+  left: 15px;
+
+}
+
+.svg {
+  
+  position: absolute;
+  top: 20px;
+  left: -90px;
+  
+}
