@@ -36,7 +36,7 @@ shinyServer(
     # source(file.path(path$script, "missingValues.R"))
     # source(file.path(path$script, "reccurentCheck.R"))
     
-    source("~/Work/Projects/sydney-rain-forecast/shinyapp/src/script/R/weather-dashboard/k_widgets.R")
+    #source("~/Work/Projects/sydney-rain-forecast/shinyapp/src/script/R/weather-dashboard/k_widgets.R")
     
     
     # *******************************************************************************************************
