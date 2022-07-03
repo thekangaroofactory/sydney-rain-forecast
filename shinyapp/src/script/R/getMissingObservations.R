@@ -29,7 +29,7 @@ getMissingObservations <- function(x, path){
   
   # 5. call 
   helper <- function(x)
-    downloadObservations(year = x$year, month = x$month, path = "~/Work/Projects/sydney-rain-forecast/shinyapp/dataset/downloads")
+    downloadObservations(year = x$year, month = x$month, path = path)
   
   # apply helper
   # TODO: check if needed - empty or bad time for today ????

@@ -50,8 +50,9 @@ downloadObservations <- function(year = NULL, month = NULL, station = "IDCJDW212
   target_file <- file.path(path, target_file)
   
   # -- check folder
-  if(!dir.exists(path))
+  if(!dir.exists(path)){
     cat("[WARNING!] Target directory", path , "does not exist! \n")
+    dir.create(path)}
   
   # -- write file
   cat("Writing file to ", target_file, "\n")
