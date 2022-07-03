@@ -1,7 +1,7 @@
 
 
 evaluateModel <- function(df, threshold = 0.5, verbose = FALSE){
-
+  
   # -- add binary prediction column
   df$Binary.Prediction <- ifelse(df$Raw.Prediction < threshold, 0, 1)
   
@@ -12,17 +12,17 @@ evaluateModel <- function(df, threshold = 0.5, verbose = FALSE){
   observations <- dim(df)[[1]]
   
   # -- predictions ok/ko
-  prediction_ok <- sum(df$match)
+  prediction_ok <- sum(df$match, na.rm = TRUE)
   prediction_ko <- observations - prediction_ok
   
   # -- accuracy
   accuracy <- round(prediction_ok / observations * 100, digits = 2)
   
   # -- confusion matrix
-  true_positive <- sum((df$Binary.Prediction == 1) & (df$RainTomorrow == 1))
-  false_positive <- sum((df$Binary.Prediction == 1) & (df$RainTomorrow == 0))
-  true_negative <- sum((df$Binary.Prediction == 0) & (df$RainTomorrow == 0))
-  false_negative <- sum((df$Binary.Prediction == 0) & (df$RainTomorrow == 1))
+  true_positive <- sum((df$Binary.Prediction == 1) & (df$RainTomorrow == 1), na.rm = TRUE)
+  false_positive <- sum((df$Binary.Prediction == 1) & (df$RainTomorrow == 0), na.rm = TRUE)
+  true_negative <- sum((df$Binary.Prediction == 0) & (df$RainTomorrow == 0), na.rm = TRUE)
+  false_negative <- sum((df$Binary.Prediction == 0) & (df$RainTomorrow == 1), na.rm = TRUE)
   
   # -- precision / recall
   precision <- round(true_positive / (true_positive + false_positive), digits = 2)

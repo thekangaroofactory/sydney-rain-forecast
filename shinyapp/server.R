@@ -36,6 +36,9 @@ shinyServer(
     # source(file.path(path$script, "missingValues.R"))
     # source(file.path(path$script, "reccurentCheck.R"))
     
+    source("~/Work/Projects/sydney-rain-forecast/shinyapp/src/script/R/weather-dashboard/k_widgets.R")
+    
+    
     # *******************************************************************************************************
     # DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
     # *******************************************************************************************************
@@ -68,6 +71,9 @@ shinyServer(
     analysisManager_Server("analyze", r)
     nanManager_Server("nan", r)
     reccurentCheck_Server("check", r)
+    
+    # -- dashboard
+    weatherDashboard_Server("dashboard", r, path, file)
     
     
     # -- check python
