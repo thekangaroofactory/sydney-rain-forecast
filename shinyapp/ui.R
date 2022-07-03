@@ -16,6 +16,7 @@ source(file.path("./src/script/R", "dataset.R"))
 source(file.path("./src/script/R", "analyze.R"))
 source(file.path("./src/script/R", "missingValues.R"))
 source(file.path("./src/script/R", "reccurentCheck.R"))
+source(file.path("./src/script/R/weather-dashboard", "weather_ui.R"))
 
 # -- Define UI
 
@@ -25,19 +26,22 @@ header <- dashboardHeader(title = "Sydney Rain Forecast")
 # Sidebar
 sidebar <- dashboardSidebar(
     sidebarMenu(
-        menuItem("Project Dashboard", tabName = "dashboard", icon = icon("dashboard"), selected = TRUE),
+        menuItem("Project Dashboard", tabName = "project", icon = icon("dashboard"), selected = TRUE),
         menuItem("Introduction", tabName = "introduction", icon = icon("file")),
         menuItem("Exploratory Analysis", tabName = "analyze", icon = icon("file")),
         menuItem("Missing values", tabName = "nan", icon = icon("file")),
         menuItem("Evaluation & Monitoring", tabName = "monitoring", icon = icon("file"))
-    )
-)
+        #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"), selected = FALSE)
+        ), collapsed = FALSE)
 
 # Body
 body <- dashboardBody(
     
-    # -- Include custom CSS file
-    includeCSS("www/kangarooai.css"),
+    # -- Include custom CSS files
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "kangarooai.css"),
+      #tags$link(rel = "stylesheet", type = "text/css", href = "sydney.css")
+    ),
     
     # -- To use sweet progressBar
     useSweetAlert("material-ui", ie = TRUE),
@@ -45,7 +49,7 @@ body <- dashboardBody(
     tabItems(
         
         # -- TAB: Dashboard ----------------------------------------------------
-        tabItem(tabName = "dashboard",
+        tabItem(tabName = "project",
                 h2("Project Dashboard"),
                 
                 fluidRow(
@@ -64,16 +68,19 @@ body <- dashboardBody(
                   
                   column(width = 4, 
                          
-                         h3("Version 1.2.4"),
+                         h3("Version 1.3.7"),
                          p("This is a stable version of the App."),
                          tags$ul(
                            tags$li("In session Exploratory Analysis"),
                            tags$li("Missing Values (basic view)"),
                            tags$li("2 models delivered"),
-                           tags$li("Live prediction & evaluation")),
+                           tags$li("Live prediction & evaluation"),
+                           tags$li("Automatic download of the new observations"),
+                           tags$li("Automatic processing of the observations")
+                           ),
                          
                          h3("Observations"),
-                         p("Sep 2019 - April 2022")
+                         p("Sep 2019 - Today")
                          
                          )),
                 
@@ -354,37 +361,38 @@ body <- dashboardBody(
                     fluidRow(
                         column(width = 12, 
                                h3("Observations"),
+                               p("There is one extra row corresponding to today's observation (it's avaible as an incomplete row until the next day)."),
                                itemTable_UI("check")))),
                 
                 
                 # -- 2nd row: ROC Curve & AUC
                 wellPanel(
                     fluidRow(
-                        column(width = 12, 
+                        #column(width = 12, 
                                
-                               column(width = 6, 
+                               column(width = 3, 
                                       h3("ROC Curve"),
                                       rocPlot_UI("check")),
-                               column(width = 6, 
+                               column(width = 3, 
                                       h3("Area Under Curve"),
                                       auc_roc_UI("check"),
                                       p("ROC curves may provide an excessively optimistic view of the performance for highly imbalanced datasets.
-                                        This is true with model M1: the dataset is highly screwed with only ~20% positive examples."))))),
+                                        This is true with model M1: the dataset is highly screwed with only ~20% positive examples.")),
                 
                 
                 
                 # -- 3rd row: Precision/Recall Curve & AUC
-                wellPanel(
-                    fluidRow(
-                        column(width = 12, 
+                #wellPanel(
+                    #fluidRow(
+                        #column(width = 12, 
                                
-                               column(width = 6, 
+                               column(width = 3, 
                                       h3("Precision/Recall Curve"),
                                       prPlot_UI("check")),
-                               column(width = 6, 
+                               column(width = 3, 
                                       h3("Area Under Curve"),
                                       auc_pr_UI("check"),
-                                      p("Precision and recall make it possible to assess the performance of a classifier on the minority class."))))),
+                                      p("Precision and recall make it possible to assess the performance of a classifier on the minority class.")))),
                 
                 
                 # -- 4th row: playground and monitoring
@@ -429,31 +437,53 @@ body <- dashboardBody(
                                f1Score_UI("check"))),
                     
                     # -- prediction density
+                    fluidRow(
+                        column(width = 6,
+                               predictionDensityPlot_UI("check")),
+                        column(width = 6,
+                               accuracyDensityPlot_UI("check"))),
                     # fluidRow(
-                    #     column(width = 6, 
-                    #            predictionDensityPlot_UI("check")),
-                    #     column(width = 6, 
-                    #            accuracyDensityPlot_UI("check"))),
-                    # fluidRow(
-                    #     column(width = 6, 
+                    #     column(width = 6,
                     #            TPDensityPlot_UI("check")),
-                    #     column(width = 6, 
+                    #     column(width = 6,
                     #            FPDensityPlot_UI("check"))),
                     # fluidRow(
-                    #     column(width = 6, 
+                    #     column(width = 6,
                     #            TNDensityPlot_UI("check")),
-                    #     column(width = 6, 
+                    #     column(width = 6,
                     #            FNDensityPlot_UI("check"))),
-                    # fluidRow(
-                    #     column(width = 6, 
-                    #            RainPredictionDensityPlot_UI("check")),
-                    #     column(width = 6, 
-                    #            NoRainPredictionDensityPlot_UI("check")))
+                    fluidRow(
+                        column(width = 6,
+                               RainPredictionDensityPlot_UI("check")),
+                        column(width = 6,
+                               NoRainPredictionDensityPlot_UI("check")))
                     )
                 
         )
         
         # -- END: Monitoring ---------------------------------------------------
+        
+        
+        # -- TAB: Dashboard ---------------------------------------------------
+        # tabItem(tabName = "dashboard",
+        #         
+        #         h2("Weather Dashboard"),
+        #         
+        #         
+        #         fluidRow(column(width = 4,
+        #                         widget_date_UI("dashboard"))),
+        #                  
+        #         fluidRow(column(width = 4,
+        #                         widget_temperature_UI("dashboard")),
+        #                  column(width = 4,
+        #                         widget_sunshine_UI("dashboard"))),
+        #         
+        #         fluidRow(column(width = 4,
+        #                         widget_1000_UI("dashboard")))
+        # )
+        
+        # -- END: Dashboard ---------------------------------------------------
+                  
 
     ) # -- tabItems
 ) # -- dashboardBody

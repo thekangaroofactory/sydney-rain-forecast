@@ -355,7 +355,7 @@ reccurentCheck_Server <- function(id, r) {
     subset_index_list <- reactiveVal(NULL)
     
     # -- formatted data (to retrieve dates)
-    formated_ds <- reactiveVal(NULL)
+    r$formated_ds <- reactiveVal(NULL)
     
     # -- predictions
     predictions <- reactiveVal(NULL)
@@ -395,7 +395,7 @@ reccurentCheck_Server <- function(id, r) {
     formated_df <- read.csv(file.path(path$formated, file$formated), header = TRUE)
     formated_df$Date <- as.Date(formated_df$Date, format = "%Y-%m-%d")
     cat("Test dataset loaded, size =", dim(formated_df), "\n")
-    formated_ds(formated_df)
+    r$formated_ds <- reactiveVal(formated_df)
     
     # -- get min & max date range
     date_min <- min(formated_df$Date)
@@ -431,7 +431,7 @@ reccurentCheck_Server <- function(id, r) {
       
     
     # -- Main table
-    output$itemTable <- renderDT(formated_ds(),
+    output$itemTable <- renderDT(r$formated_ds(),
                                  options = list(lengthMenu = c(5, 1),
                                                 pageLength = 5,
                                                 dom = "lfrtip", #tp
@@ -450,7 +450,9 @@ reccurentCheck_Server <- function(id, r) {
     
     # -- number of selected observations
     output$nb_select_obs <- renderValueBox(
-      valueBox(sum(subset_index_list()), "Nb selected obs", width = 4, color = "purple")
+      #valueBox(sum(subset_index_list()), "Nb selected obs", width = 4, color = "purple")
+      valueBox(sum(monitoring()$Observations), "Nb selected obs", width = 4, color = "purple")
+      
     )
     
     # -- number of predictions OK
@@ -551,6 +553,10 @@ reccurentCheck_Server <- function(id, r) {
       cat("  - Read pre-processed dataset from file \n")
       processed_df <- readProcessedData(path$processed, data_file)
       
+      # -- drop line if RainTomorrow is NA (last line probably)
+      if(any(is.na(processed_df['RainTomorrow'])))
+        processed_df <- processed_df[-which(is.na(processed_df['RainTomorrow'])), ]
+      
       # -- split input and labels
       labels_df <- processed_df["RainTomorrow"]
       input_df <- processed_df[, !names(processed_df) %in% c("RainTomorrow")]
@@ -569,7 +575,7 @@ reccurentCheck_Server <- function(id, r) {
       cat("[observeEvent] New date_range input value =", input$date_range, "\n")
       
       # -- get indexes matching date range
-      index <- formated_ds()$Date >= input$date_range[[1]] & formated_ds()$Date <= input$date_range[[2]]
+      index <- r$formated_ds()$Date >= input$date_range[[1]] & r$formated_ds()$Date <= input$date_range[[2]]
       cat("  - Selected rows = ", sum(index), "\n")
       
       # -- store
@@ -609,6 +615,9 @@ reccurentCheck_Server <- function(id, r) {
       raw_predictions <- as.data.frame(raw_predictions)
       colnames(raw_predictions) <- c("Raw.Prediction")
       
+      if(DEBUG)
+        raw_predictions <<- raw_predictions
+      
       # -- store
       predictions(raw_predictions)
       
@@ -627,16 +636,11 @@ reccurentCheck_Server <- function(id, r) {
       test_labels <- test_labels()
       predictions <- predictions()
       
-      
-      # *********************************************
-      # BS for yearly check -- to be removvvvveeeeeeeeedddddddddddddd !!!
-      
-      # debug__predictions <<- predictions
-      
-      # *********************************************
-      
       # -- merge
       to_eval_df <- cbind(test_labels, predictions)
+      
+      if(DEBUG)
+        raw_predictions_with_labels <<- to_eval_df
       
       # -- eval along threshold sequence
       cat("  - Evaluating model along threshold sequence... \n")
@@ -712,16 +716,10 @@ reccurentCheck_Server <- function(id, r) {
         # -- merge
         df_to_eval <- cbind(test_labels, predictions)
         
-        # -- subset give subset_index_list
+        # -- subset df, drop if NA line is created by date selection (last line)
         df_to_eval <- df_to_eval[subset_index_list(), ]
-        
-        # **********************************************************************
-        # -- DEBUG
-        
-        DEBUG_df_to_eval <<- df_to_eval
-        
-        # **********************************************************************
-        
+        if(any(is.na(df_to_eval['RainTomorrow'])))
+          df_to_eval <- df_to_eval[-which(is.na(df_to_eval['RainTomorrow'])), ]
         
         # -- call distribution plot function
         cat("  - Build predictions distribution plots \n")
@@ -729,7 +727,7 @@ reccurentCheck_Server <- function(id, r) {
         
         # -- store
         monitoring_plots(dist_plots)
-        
+                
         # -- call evaluation function
         cat("  - Evaluate selected predictions \n")
         eval <- evaluateModel(df_to_eval, input$thresholdSlider, verbose = TRUE)
