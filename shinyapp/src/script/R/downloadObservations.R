@@ -14,6 +14,8 @@ library (RCurl)
 
 downloadObservations <- function(year = NULL, month = NULL, station = "IDCJDW2124", path){
   
+  showNotification("Downloading new observations")
+  
   # check arguments
   if(is.null(year)){
     
@@ -54,6 +56,9 @@ downloadObservations <- function(year = NULL, month = NULL, station = "IDCJDW212
   # -- write file
   cat("Writing file to ", target_file, "\n")
   write(download, target_file)
+  
+  # -- return file url
+  target_file
   
 }
 
