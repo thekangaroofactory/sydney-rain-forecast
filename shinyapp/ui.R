@@ -38,10 +38,10 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
     
     # -- Include custom CSS files
-    tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", href = "kangarooai.css"),
-      #tags$link(rel = "stylesheet", type = "text/css", href = "sydney.css")
-    ),
+    # tags$head(
+    #   tags$link(rel = "stylesheet", type = "text/css", href = "kangarooai.css"),
+    #   tags$link(rel = "stylesheet", type = "text/css", href = "sydney.css")
+    # ),
     
     # -- To use sweet progressBar
     useSweetAlert("material-ui", ie = TRUE),
@@ -466,18 +466,18 @@ body <- dashboardBody(
         
         # -- TAB: Dashboard ---------------------------------------------------
         # tabItem(tabName = "dashboard",
-        #         
+        # 
         #         h2("Weather Dashboard"),
-        #         
-        #         
+        # 
+        # 
         #         fluidRow(column(width = 4,
         #                         widget_date_UI("dashboard"))),
-        #                  
+        # 
         #         fluidRow(column(width = 4,
         #                         widget_temperature_UI("dashboard")),
         #                  column(width = 4,
         #                         widget_sunshine_UI("dashboard"))),
-        #         
+        # 
         #         fluidRow(column(width = 4,
         #                         widget_1000_UI("dashboard")))
         # )

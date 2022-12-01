@@ -18,9 +18,11 @@ getMissingObservations <- function(x, path){
   seq_start <- if(isComplete) latest_obs_date + 1 else latest_obs_date
   
   # 3b. get last day of this month
-  year <- format(Sys.Date(), "%Y")
-  month <- format(Sys.Date(), "%m")
-  seq_end <- as.Date(paste0(year, "-", as.numeric(month) + 1, "-01")) - 1
+  # *** fixing bug
+  # year <- format(Sys.Date(), "%Y")
+  # month <- format(Sys.Date(), "%m")
+  # seq_end <- as.Date(paste0(year, "-", as.numeric(month) + 1, "-01")) - 1
+  seq_end <- lubridate::ceiling_date(Sys.Date(), 'month') %m-% days(1)
   
   # 4. make sequence
   downloads_df <- format(seq(seq_start, seq_end, by = "month"), "%Y-%m")
