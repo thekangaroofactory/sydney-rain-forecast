@@ -8,7 +8,7 @@
 library(shiny)
 library(shinydashboard)
 library(DT)
-library(kpython)
+#library(kpython)
 
 # -- Modules
 source(file.path("./src/script/R", "map.R"))

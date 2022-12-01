@@ -5,7 +5,7 @@
 
 # -- Library
 library(shiny)
-library(kpython)
+#library(kpython)
 library(reticulate)
 
 # -- Init env
