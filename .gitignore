@@ -45,6 +45,5 @@ project
 # plot outputs
 *.png
 
-# Processed datasets
-formated/
-processed/
+# datasets
+dataset/
