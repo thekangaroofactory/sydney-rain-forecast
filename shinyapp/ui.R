@@ -3,27 +3,20 @@
 # This is the user-interface definition of the Shiny web application
 # --------------------------------------------------------------------------------
 
-# -- Library
-
-library(shiny)
-library(shinydashboard)
-library(DT)
-#library(kpython)
-
-# -- Modules
-source(file.path("./src/script/R", "map.R"))
-source(file.path("./src/script/R", "dataset.R"))
-source(file.path("./src/script/R", "analyze.R"))
-source(file.path("./src/script/R", "missingValues.R"))
-source(file.path("./src/script/R", "reccurentCheck.R"))
-source(file.path("./src/script/R/weather-dashboard", "weather_ui.R"))
+# -- Setup application environment
+source("setup.R")
 
 # -- Define UI
+cat("------------------------------------------------\n")
+cat("[UI] Building application UI \n")
+cat("------------------------------------------------\n")
 
 # Header
+cat("  - Building dashboard header \n")
 header <- dashboardHeader(title = "Sydney Rain Forecast")
 
 # Sidebar
+cat("  - Building sidebar \n")
 sidebar <- dashboardSidebar(
     sidebarMenu(
         menuItem("Project Dashboard", tabName = "project", icon = icon("dashboard"), selected = TRUE),
@@ -35,6 +28,7 @@ sidebar <- dashboardSidebar(
         ), collapsed = FALSE)
 
 # Body
+cat("  - Building dashboard body \n")
 body <- dashboardBody(
     
     # -- Include custom CSS files
@@ -68,7 +62,7 @@ body <- dashboardBody(
                   
                   column(width = 4, 
                          
-                         h3("Version 1.3.8"),
+                         h3("Version 1.3.9"),
                          p("This is a stable version of the App."),
                          tags$ul(
                            tags$li("In session Exploratory Analysis"),
@@ -124,9 +118,7 @@ body <- dashboardBody(
                          textOutput("version_comment"),
 
                          h3("Python"),
-                         p("The TensorFlow/Keras interface to Python is setup through the Reticulate package."),
-                         #python_version_UI("python"),
-                         #which_python_UI("python")
+                         p("The TensorFlow/Keras interface to Python is setup through the Reticulate package.")
                          ))),
         
         # -- END: Dashboard ----------------------------------------------------
@@ -490,6 +482,7 @@ body <- dashboardBody(
 
 
 # -- Put them together into a dashboard
+cat("Building final dashboard UI \n")
 
 dashboardPage(
     header,

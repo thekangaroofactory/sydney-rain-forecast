@@ -1,13 +1,15 @@
 
 
-# -- Debug
-DEBUG <- TRUE
 
 # -- Detect local run
 is_local <- Sys.getenv('SHINY_PORT') == ""
 
 # -- Detect if code run in shiny
 is_shiny <- shiny::isRunning()
+
+# -- Debug
+DEBUG <- ifelse(is_local, TRUE, FALSE)
+
 
 
 # --------------------------------------------------------------------------------

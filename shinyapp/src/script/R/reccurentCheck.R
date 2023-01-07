@@ -4,12 +4,6 @@
 # Shiny module: Reccurent check
 # ------------------------------------------------------------------------------
 
-# -- Library
-library(data.table)
-library(PRROC)
-library(shinyWidgets)
-library(keras)
-
 # ------------------------------------------------------------------------------
 # UI ITEMS SECTION
 # ------------------------------------------------------------------------------
@@ -538,6 +532,17 @@ reccurentCheck_Server <- function(id, r) {
       model_file <- model_list()[model_list()$Name == input$selected_model, ]$File
       
       # -- load model & store
+      # if(is_local){
+      #   
+      #   cat("  - Init conda env \n")
+      #   reticulate::use_condaenv("r-reticulate",required = TRUE)
+      #   
+      # } else {
+      #   
+      #   library(reticulate)
+      #   
+      # }
+      
       cat("  - Load TF model from file \n")
       model <- loadTFmodel(path$model, model_file)
       tf_model(model)

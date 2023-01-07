@@ -4,7 +4,7 @@
 # --------------------------------------------------------------------------------
 
 # -- Library
-library(leaflet)
+#library(leaflet)
 
 
 # -- Source dependencies
