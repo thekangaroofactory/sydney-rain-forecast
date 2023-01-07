@@ -113,9 +113,9 @@ body <- dashboardBody(
                          h3("GitHub"),
                          tags$a("https://github.com/kangarooaifr/sydney-rain-forecast", href = "https://github.com/kangarooaifr/sydney-rain-forecast"),
                          
-                         h3("Last Git commit"),
-                         textOutput("version_timestamp"),
-                         textOutput("version_comment"),
+                         # h3("Last Git commit"),
+                         # textOutput("version_timestamp"),
+                         # textOutput("version_comment"),
 
                          h3("Python"),
                          p("The TensorFlow/Keras interface to Python is setup through the Reticulate package.")

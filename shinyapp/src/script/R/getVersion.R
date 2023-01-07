@@ -48,7 +48,7 @@ getVersion <- function(debug = FALSE){
                                 "comment" = comment)
     
     # save
-    target_url = file.path("shinyapp", path$resource, "version.csv")
+    target_url = file.path(path$resource, "version.csv")
     cat("Writing git version to :", target_url, "\n")
     write.csv(version_df, file = target_url, row.names = FALSE)
     

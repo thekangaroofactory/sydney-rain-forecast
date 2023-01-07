@@ -27,11 +27,11 @@ shinyServer(
     
     
     # -- get App version
-    app_version <- getVersion()
+    #app_version <- getVersion()
     
     # -- ouput version info
-    output$version_timestamp <- renderText({paste("Version:", app_version[[1]])})
-    output$version_comment <- renderText(app_version[[2]])
+    #output$version_timestamp <- renderText({paste("Version:", app_version[[1]])})
+    #output$version_comment <- renderText(app_version[[2]])
     
     # -- call application modules
     map_Server("map")
