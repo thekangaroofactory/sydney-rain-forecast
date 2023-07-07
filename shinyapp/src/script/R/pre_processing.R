@@ -19,13 +19,13 @@ pre_process <- function(inputs, formated_ds){
                   "X9am.relative.humidity...." = "numeric",
                   "X9am.cloud.amount..oktas." = "numeric",
                   "X9am.wind.direction" = "character",
-                  "X9am.wind.speed..km.h." = "numeric",
+                  "X9am.wind.speed..km.h." = "character",
                   "X9am.MSL.pressure..hPa." = "numeric",
                   "X3pm.Temperature...C." = "numeric",
                   "X3pm.relative.humidity...." = "numeric",
                   "X3pm.cloud.amount..oktas." = "numeric",
                   "X3pm.wind.direction" = "character",
-                  "X3pm.wind.speed..km.h." = "numeric",
+                  "X3pm.wind.speed..km.h." = "character",
                   "X3pm.MSL.pressure..hPa." = "numeric")
     
   
@@ -95,11 +95,23 @@ pre_process <- function(inputs, formated_ds){
     # reorder
     raw_df = raw_df[col_order]
     
+    raw_df <<- raw_df
+    
     # ---------------------------------------------------
     # Format
 
     # Date column
     raw_df$Date = as.Date(raw_df$Date, format = '%Y-%m-%d')
+    
+    # Check columns 'WindSpeed9am' & 'WindSpeed3pm'
+    if("Calm" %in% unique(raw_df$WindSpeed9am))
+      raw_df[raw_df$WindSpeed9am == "Calm", ]$WindSpeed9am <- "0"
+    if("Calm" %in% unique(raw_df$WindSpeed3pm))
+      raw_df[raw_df$WindSpeed3pm == "Calm", ]$WindSpeed3pm <- "0"
+    
+    # Cast to numeric
+    raw_df$WindSpeed9am <- as.numeric(raw_df$WindSpeed9am)
+    raw_df$WindSpeed3pm <- as.numeric(raw_df$WindSpeed3pm)
     
     # ---------------------------------------------------
     # Add columns to fit original data
