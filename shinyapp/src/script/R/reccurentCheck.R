@@ -596,6 +596,9 @@ reccurentCheck_Server <- function(id, r) {
       
       cat("[observeEvent] Model & test dataset updated \n")
       
+      # -- build prediction file name
+      filename <- paste0("raw_predictions_", input$selected_model)
+      
       # -- check local run (*** to avoid python issue on remote!)
       if(is_local){
         
@@ -617,7 +620,7 @@ reccurentCheck_Server <- function(id, r) {
         colnames(raw_predictions) <- c("Raw.Prediction")
         
         # -- save predictions
-        saveRDS(raw_predictions, file = file.path(path$prediction, "raw_predictions"))
+        saveRDS(raw_predictions, file = file.path(path$prediction, filename))
         cat("  - Predictions saved \n")
         
       } else {
@@ -628,7 +631,7 @@ reccurentCheck_Server <- function(id, r) {
         updateProgress(title = "Read predictions...", debug = pb_debug)
         
         # -- read predictions
-        raw_predictions <- readRDS(file = file.path(path$prediction, "raw_predictions"))
+        raw_predictions <- readRDS(file = file.path(path$prediction, filename))
         
       }
       
