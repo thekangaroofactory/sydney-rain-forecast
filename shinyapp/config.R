@@ -28,7 +28,8 @@ path <- list(script = file.path(home, "src/script/R"),
              processed = file.path(home, "dataset/processed"),
              download = file.path(home, "dataset/downloads"),
              model = file.path(home, "output/models"),
-             schema = file.path(home, "output/schemas"))
+             schema = file.path(home, "output/schemas"),
+             prediction = file.path(home, "output/predictions"))
 
 
 # --------------------------------------------------------------------------------
