@@ -532,19 +532,12 @@ reccurentCheck_Server <- function(id, r) {
       model_file <- model_list()[model_list()$Name == input$selected_model, ]$File
       
       # -- load model & store
-      # if(is_local){
-      #   
-      #   cat("  - Init conda env \n")
-      #   reticulate::use_condaenv("r-reticulate",required = TRUE)
-      #   
-      # } else {
-      #   
-      #   library(reticulate)
-      #   
-      # }
-      
       cat("  - Load TF model from file \n")
-      model <- loadTFmodel(path$model, model_file)
+      model <- NULL
+      if(is_local)
+        model <- loadTFmodel(path$model, model_file)
+      else
+        cat("    [INFO] >> Run remote: skip model loading! \n")
       tf_model(model)
 
 
@@ -603,22 +596,41 @@ reccurentCheck_Server <- function(id, r) {
       
       cat("[observeEvent] Model & test dataset updated \n")
       
-      # -- update progressBar
-      updateProgress(title = "Making predictions...", debug = pb_debug)
-      
-      # -- get values
-      model <- tf_model()
-      input_df <- test_ds()
-      
-      # -- set parameters
-      batch_size = 32 #default
-      verbose = 1
-      
-      # -- make predictions
-      cat("  - Compute predictions \n")
-      raw_predictions <- makePrediction(model, input_df, batch_size = batch_size, verbose = verbose, steps = NULL, callbacks = NULL)
-      raw_predictions <- as.data.frame(raw_predictions)
-      colnames(raw_predictions) <- c("Raw.Prediction")
+      # -- check local run (*** to avoid python issue on remote!)
+      if(is_local){
+        
+        # -- update progressBar
+        updateProgress(title = "Making predictions...", debug = pb_debug)
+        
+        # -- get values
+        model <- tf_model()
+        input_df <- test_ds()
+        
+        # -- set parameters
+        batch_size = 32 #default
+        verbose = 1
+        
+        # -- make predictions
+        cat("  - Compute predictions \n")
+        raw_predictions <- makePrediction(model, input_df, batch_size = batch_size, verbose = verbose, steps = NULL, callbacks = NULL)
+        raw_predictions <- as.data.frame(raw_predictions)
+        colnames(raw_predictions) <- c("Raw.Prediction")
+        
+        # -- save predictions
+        saveRDS(raw_predictions, file = file.path(path$prediction, "raw_predictions"))
+        cat("  - Predictions saved \n")
+        
+      } else {
+        
+        cat("[INFO] Read raw predictions from file \n")
+        
+        # -- update progressBar
+        updateProgress(title = "Read predictions...", debug = pb_debug)
+        
+        # -- read predictions
+        raw_predictions <- readRDS(file = file.path(path$prediction, "raw_predictions"))
+        
+      }
       
       if(DEBUG)
         raw_predictions <<- raw_predictions
