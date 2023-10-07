@@ -41,7 +41,8 @@ shinyServer(
     reccurentCheck_Server("check", r)
     
     # -- dashboard
-    weatherDashboard_Server("dashboard", r, path, file)
+    if(is_local)
+      weatherDashboard_Server("dashboard", r, path, file)
         
   }
 )
