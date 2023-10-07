@@ -62,19 +62,14 @@ body <- dashboardBody(
                   
                   column(width = 4, 
                          
-                         h3("Version 1.3.9"),
-                         p("This is a stable version of the App."),
+                         h3("Version 1.3.10"),
                          tags$ul(
                            tags$li("In session Exploratory Analysis"),
                            tags$li("Missing Values (basic view)"),
-                           tags$li("2 models delivered"),
-                           tags$li("Live prediction & evaluation"),
-                           tags$li("Automatic download of the new observations"),
-                           tags$li("Automatic processing of the observations")
-                           ),
+                           tags$li("2 models delivered")),
                          
                          h3("Observations"),
-                         p("Sep 2019 - Today")
+                         p("Sep 2019 - Sep 2023")
                          
                          )),
                 
