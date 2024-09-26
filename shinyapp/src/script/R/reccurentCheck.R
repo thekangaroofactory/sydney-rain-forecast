@@ -281,8 +281,8 @@ selectModel_INPUT <- function(id){
   # namespace
   ns <- NS(id)
   
-  # text
-  uiOutput(ns("model_select"))
+  # input
+  selectInput(ns("selected_model"), h3("Select model"), choices = NULL)
   
 }
 
@@ -293,7 +293,10 @@ thresholdSlider_INPUT <- function(id){
   ns <- NS(id)
   
   # text
-  uiOutput(ns("thresholdSlider"))
+  #uiOutput("thresholdSlider")
+  
+  sliderInput(ns("thresholdSlider"), label = h3("Threshold"), 
+              min = 0, max = 1, value = 0)
   
 }
 
@@ -304,7 +307,10 @@ dateRange_INPUT <- function(id){
   ns <- NS(id)
   
   # text
-  uiOutput(ns("date_range"))
+  #uiOutput(ns("date_range"))
+  
+  # -- init input
+  dateRangeInput(ns("date_range"), label = h3("Date range"))
   
 }
 
@@ -395,6 +401,10 @@ reccurentCheck_Server <- function(id, r) {
     date_min <- min(formated_df$Date)
     date_max <- max(formated_df$Date)
     
+    # -- update input
+    updateDateRangeInput(inputId = "date_range",
+                         start = date_min, end = date_max, min = date_min, max = date_max)
+    
     
     # --------------------------------------------------------------------------
     # OUPUTS SECTION
@@ -403,16 +413,16 @@ reccurentCheck_Server <- function(id, r) {
     # -- INPUT widgets --------------------
     
     # -- select input (model list)
-    output$model_select <- renderUI(selectInput(ns("selected_model"), h3("Select model"), choices = model_list()$Name))
+    # output$model_select <- renderUI(selectInput(ns("selected_model"), h3("Select model"), choices = model_list()$Name))
     
-    # -- select threshold input (slider)
-    output$thresholdSlider <- renderUI(sliderInput(ns("thresholdSlider"), label = h3("Threshold"), 
-                                                   min = 0, max = 1, value = default_threshold[[input$selected_model]]))
-    
-    # -- select date range input
-    output$date_range <- renderUI(dateRangeInput(ns("date_range"), label = h3("Date range"), 
-                                                 start = date_min, end = date_max, min = date_min, max = date_max))
-    
+    # -- update input
+    observeEvent(model_list(), 
+                 updateSelectInput(inputId = "selected_model", choices = model_list()$Name))
+
+    # -- update input
+    observeEvent(input$selected_model,
+                 updateSliderInput(inputId = "thresholdSlider", value = default_threshold[[input$selected_model]]))
+
     
     # -- Text & Table --------------------
     
