@@ -62,14 +62,14 @@ body <- dashboardBody(
                   
                   column(width = 4, 
                          
-                         h3("Version 1.3.10"),
+                         h3("Version 1.3.11"),
                          tags$ul(
                            tags$li("In session Exploratory Analysis"),
                            tags$li("Missing Values (basic view)"),
                            tags$li("2 models delivered")),
                          
                          h3("Observations"),
-                         p("Sep 2019 - Sep 2023")
+                         p("Sept 2019 - Sept 2024")
                          
                          )),
                 
@@ -82,19 +82,19 @@ body <- dashboardBody(
                            tags$ol(
                              tags$li("Setup the pipeline:",
                                      tags$ul(
-                                       tags$li("put in place different components"),
-                                       tags$li("reuse the original project (used to be a training exercise"))),
+                                       tags$li("Put in place the different components"),
+                                       tags$li("Reuse the original project (used to be a training exercise)"))),
                              tags$li("Automatize manual steps:",
                                      tags$ul(
                                        tags$li("Download new observations"),
-                                       tags$li("Setup R/Python interface to reuse Python code"),
-                                       tags$li("Pre-process new observations with Python"),
-                                       tags$li("Make predictions using TensorFlow model"),
+                                       tags$li("Clean / prepare new observations"),
+                                       tags$li("Setup R / Python interface to make the predictions"),
+                                       tags$li("Make predictions using the TensorFlow models"),
                                        tags$li("Evaluation model & predictions"),
                                        tags$li("Monitor model & incoming data"),
                                      )),
                              
-                             tags$li("Allow user to perform live data science operation:",
+                             tags$li("Allow user to perform live data operations:",
                                      tags$ul(
                                        tags$li("Data exploration & analysis"),
                                        tags$li("Data cleaning & missing value"),
@@ -108,13 +108,7 @@ body <- dashboardBody(
                          h3("GitHub"),
                          tags$a("https://github.com/thekangaroofactory/sydney-rain-forecast", href = "https://github.com/thekangaroofactory/sydney-rain-forecast"),
                          
-                         # h3("Last Git commit"),
-                         # textOutput("version_timestamp"),
-                         # textOutput("version_comment"),
-
-                         h3("Python"),
-                         p("The TensorFlow/Keras interface to Python is setup through the Reticulate package.")
-                         ))),
+                  ))),
         
         # -- END: Dashboard ----------------------------------------------------
         
