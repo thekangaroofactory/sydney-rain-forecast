@@ -33,15 +33,18 @@ weatherDashboard_Server <- function(id, r, path, file) {
       
       # feature engineering
       feat_M1 <- featureEngineering(observations, "M1")
+      feat_M2 <- featureEngineering(observations, "M2")
 
       cat("Save processed data \n")
       processed_dataset_url <- file.path(path$processed, paste0("M1_", file$processed))
       write.csv(feat_M1, processed_dataset_url, row.names = FALSE, quote = FALSE)
+      processed_dataset_url <- file.path(path$processed, paste0("M2_", file$processed))
+      write.csv(feat_M2, processed_dataset_url, row.names = FALSE, quote = FALSE)
       
       showNotification("New observations are now ready to use")
       
       # store
-      #r$formated_ds(observations)
+      r$formated_ds(observations)
       
     })
 
