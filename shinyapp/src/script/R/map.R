@@ -48,7 +48,7 @@ map_Server <- function(id, r, path) {
         addTiles(group = "OSM") %>%
         
         # Add water color map
-        addProviderTiles(providers$Stamen.Watercolor) %>%
+        # addProviderTiles(providers$Stamen.Watercolor) %>%
         
         # Set view point
         setView(lng = 133.69, lat = -25.70, zoom = 3) %>%
